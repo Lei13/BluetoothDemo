@@ -27,6 +27,9 @@ public class ActivityBluetoothList extends BaseActivity {
     @Override
     protected void initIntent() {
 
+        
+
+
     }
 
     @Override
