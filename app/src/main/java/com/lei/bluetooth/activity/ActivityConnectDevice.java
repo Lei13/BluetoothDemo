@@ -27,7 +27,10 @@ import com.lei.bluetooth.Utils.Logs;
 import com.lei.bluetooth.Utils.ToastUtils;
 
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.logging.Handler;
 
@@ -41,6 +44,7 @@ public class ActivityConnectDevice extends BaseActivity {
     private Button btn_send,btn_read;
 
     private boolean mConnected = false;
+    private Set<BluetoothGattCharacteristic> charactics;
 
 
     // Code to manage Service lifecycle.
@@ -90,6 +94,7 @@ public class ActivityConnectDevice extends BaseActivity {
         btn_read = (Button) findViewById(R.id.btn_read);
         et_send = (EditText) findViewById(R.id.et_send);
         btn_send = (Button) findViewById(R.id.btn_send);
+        charactics = new HashSet<>();
         registerBluetoothReceiver();
         Intent gattServiceIntent = new Intent(this, BluetoothLeService.class);
         boolean bll = bindService(gattServiceIntent, mServiceConnection,
@@ -116,7 +121,11 @@ public class ActivityConnectDevice extends BaseActivity {
             case R.id.btn_read:
                 if (characteristic == null) return;
                 Logs.v("read...........");
-                mBluetoothLeService.readCharacteristic(characteristic);
+               Iterator iterator =  charactics.iterator();
+                while (iterator.hasNext()){
+                    mBluetoothLeService.readCharacteristic((BluetoothGattCharacteristic) iterator.next());
+                }
+               // mBluetoothLeService.readCharacteristic(characteristic);
                 break;
             case R.id.btn_send:
                 if (mBluetoothLeService == null) {
@@ -188,6 +197,7 @@ public class ActivityConnectDevice extends BaseActivity {
             gattService.getType();
             List<BluetoothGattCharacteristic> gattCharacteristics = gattService.getCharacteristics();
             for (BluetoothGattCharacteristic gattCharacteristic : gattCharacteristics) {
+                charactics.add(gattCharacteristic);
                 characteristic = gattCharacteristic;
                 uuid = gattCharacteristic.getUuid().toString();
                 //if (uuid.contains("fff4")) {
