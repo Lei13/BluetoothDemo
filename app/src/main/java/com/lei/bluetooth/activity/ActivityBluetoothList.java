@@ -27,6 +27,7 @@ import com.lei.bluetooth.Utils.ToastUtils;
 import com.lei.bluetooth.adapter.AdapterDeviceList;
 import com.lei.bluetooth.bean.Model;
 import com.lei.bluetooth.bean.ModelDevice;
+import com.lei.bluetooth.network.NetUtils;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -156,7 +157,8 @@ public class ActivityBluetoothList extends BaseActivity implements AdapterView.O
         switch (v.getId()) {
             case R.id.tv_search:
                 mScanning = true;
-                searchDevice();
+                 searchDevice();
+
                 break;
         }
     }
