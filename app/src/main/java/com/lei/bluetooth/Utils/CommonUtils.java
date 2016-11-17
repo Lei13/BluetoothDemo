@@ -1,12 +1,16 @@
 package com.lei.bluetooth.Utils;
 
+import android.content.Context;
+import android.telephony.TelephonyManager;
+
+import com.lei.bluetooth.application.BleApplication;
+
 /**
  * Created by lei on 2016/11/12.
  */
 
 public class CommonUtils {
-    public static byte[] reverseBytes(byte[] a)
-    {
+    public static byte[] reverseBytes(byte[] a) {
         int len = a.length;
         byte[] b = new byte[len];
         for (int k = 0; k < len; k++) {
@@ -27,6 +31,7 @@ public class CommonUtils {
         }
         return ret;
     }
+
     /**
      * byte转16进制
      *
@@ -63,4 +68,8 @@ public class CommonUtils {
     }
 
 
+    public String getPhoneIMEI() {
+        TelephonyManager manager = (TelephonyManager) BleApplication.getInstance().getSystemService(Context.TELEPHONY_SERVICE);
+        return manager.getDeviceId();
+    }
 }

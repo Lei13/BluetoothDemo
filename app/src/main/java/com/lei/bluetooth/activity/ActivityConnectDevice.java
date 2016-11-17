@@ -1,9 +1,6 @@
 package com.lei.bluetooth.activity;
 
-import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
-import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -12,30 +9,26 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.os.IBinder;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ExpandableListView;
 import android.widget.TextView;
 
 import com.lei.bluetooth.R;
 import com.lei.bluetooth.Utils.Logs;
 import com.lei.bluetooth.Utils.ToastUtils;
+import com.lei.bluetooth.activity.base.BaseActivity;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
-import java.util.logging.Handler;
 
 public class ActivityConnectDevice extends BaseActivity {
-    TextView tv_device_info, tv_data, tv_connect_state;
+    private TextView tv_device_info, tv_data, tv_connect_state;
     private String mDeviceName;
     private String mDeviceAddress;
     private BluetoothLeService mBluetoothLeService;
@@ -157,10 +150,10 @@ public class ActivityConnectDevice extends BaseActivity {
         @Override
         public void onReceive(Context context, Intent intent) {
             final String action = intent.getAction();
-            if (BluetoothLeService.ACTION_GATT_CONNECTED.equals(action)) {
+            if (BluetoothLeService.ACTION_GATT_CONNECTED.equals(action)) {//匹配连接成功
                 mConnected = true;
                 tv_connect_state.setText("connect");
-            } else if (BluetoothLeService.ACTION_GATT_DISCONNECTED.equals(action)) {
+            } else if (BluetoothLeService.ACTION_GATT_DISCONNECTED.equals(action)) {//断开连接
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
@@ -169,9 +162,9 @@ public class ActivityConnectDevice extends BaseActivity {
                     }
                 });
 
-            } else if (BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED.equals(action)) {
+            } else if (BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED.equals(action)) {//发现服务
                 displayGattServices(mBluetoothLeService.getSupportedGattServices());
-            } else if (BluetoothLeService.ACTION_DATA_AVAILABLE.equals(action)) {
+            } else if (BluetoothLeService.ACTION_DATA_AVAILABLE.equals(action)) {//接受到数据
                 displayData(intent.getStringExtra(BluetoothLeService.EXTRA_DATA));
             }
         }
