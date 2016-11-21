@@ -4,10 +4,12 @@ import java.util.Objects;
 
 /**
  * Created by lei on 2016/11/12.
+ * 搜索到蓝牙设备
  */
 
 public class ModelDevice extends Model {
     private String name, address;
+    private String extraData;
 
 
     public String getName() {
@@ -34,5 +36,13 @@ public class ModelDevice extends Model {
         ModelDevice device = (ModelDevice) o;
         return String.valueOf(name).equals(String.valueOf(device.name)) &&
                 String.valueOf(address).equals(String.valueOf(device.address));
+    }
+
+    public String getExtraData() {
+        return extraData;
+    }
+
+    public void setExtraData(String extraData) {
+        this.extraData = extraData;
     }
 }

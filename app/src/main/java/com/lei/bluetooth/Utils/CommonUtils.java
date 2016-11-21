@@ -68,7 +68,7 @@ public class CommonUtils {
     }
 
 
-    public String getPhoneIMEI() {
+    public static String getPhoneIMEI() {
         TelephonyManager manager = (TelephonyManager) BleApplication.getInstance().getSystemService(Context.TELEPHONY_SERVICE);
         return manager.getDeviceId();
     }

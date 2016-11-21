@@ -16,7 +16,7 @@
         android:layout_marginTop="5dp"
         android:textSize="12sp"
         android:text="家居风格"
-        android:id="@+id/tv_dec"
+        android:id="@+id/tv_address"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
 

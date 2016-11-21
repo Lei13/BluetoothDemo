@@ -27,19 +27,19 @@ public class AdapterDeviceList extends AdapterBase {
             holder = new ViewHolder();
             convertView = inflater.inflate(R.layout.list_item_device, parent, false);
             holder.tv_name = (TextView) convertView.findViewById(R.id.tv_name);
-            holder.tv_dec = (TextView) convertView.findViewById(R.id.tv_dec);
+            holder.tv_address = (TextView) convertView.findViewById(R.id.tv_address);
             convertView.setTag(holder);
-        }else
-        holder = (ViewHolder) convertView.getTag();
-        ModelDevice device= (ModelDevice) getItem(position);
-        holder.tv_name.setText(device.getName());
-        holder.tv_dec.setText(device.getAddress());
+        } else
+            holder = (ViewHolder) convertView.getTag();
+        ModelDevice device = (ModelDevice) getItem(position);
+        holder.tv_name.setText("Name:  " + device.getName() + "     extra_data " + device.getExtraData());
+        holder.tv_address.setText("Address:  "+device.getAddress());
         return convertView;
     }
 
 
     static class ViewHolder {
-        static TextView tv_name, tv_dec;
+        static TextView tv_name, tv_address;
 
     }
 }

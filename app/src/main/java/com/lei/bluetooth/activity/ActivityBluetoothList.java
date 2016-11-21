@@ -115,12 +115,14 @@ public class ActivityBluetoothList extends BaseActivity implements AdapterView.O
     BluetoothAdapter.LeScanCallback leScanCallback = new BluetoothAdapter.LeScanCallback() {
         @Override
         public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
+            String extra = new String(scanRecord);
             String struuid = CommonUtils.bytes2HexString(CommonUtils.reverseBytes(scanRecord)).replace("-", "").toLowerCase();
             String sring = device.getName();
             Logs.v("onLeScan<<<<  scanRecord[]  " + struuid + "  name  " + sring + "  address   " + device.getAddress());
             ModelDevice device1 = new ModelDevice();
             device1.setName(device.getName());
             device1.setAddress(device.getAddress());
+            device1.setExtraData(extra);
             if (!deviceList.contains(device1))
                 deviceList.add(device1);
             adapter.notifyDataSetChanged();

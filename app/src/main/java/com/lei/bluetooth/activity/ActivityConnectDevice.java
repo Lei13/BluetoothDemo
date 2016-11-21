@@ -14,6 +14,7 @@ import android.text.TextUtils;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ListView;
 import android.widget.TextView;
 
 import com.lei.bluetooth.R;
@@ -35,6 +36,7 @@ public class ActivityConnectDevice extends BaseActivity {
     private ArrayList<ArrayList<BluetoothGattCharacteristic>> mGattCharacteristics = new ArrayList<ArrayList<BluetoothGattCharacteristic>>();
     private EditText et_send;
     private Button btn_send, btn_read;
+    private ListView listview;
 
     private boolean mConnected = false;
     private Set<BluetoothGattCharacteristic> charactics;
@@ -86,6 +88,7 @@ public class ActivityConnectDevice extends BaseActivity {
         btn_read = (Button) findViewById(R.id.btn_read);
         et_send = (EditText) findViewById(R.id.et_send);
         btn_send = (Button) findViewById(R.id.btn_send);
+        listview = (ListView) findViewById(R.id.listview);
         charactics = new HashSet<>();
         registerBluetoothReceiver();
         Intent gattServiceIntent = new Intent(this, BluetoothLeService.class);

@@ -7,6 +7,7 @@ import com.android.volley.Response;
 import com.android.volley.Response.Listener;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
+import com.lei.bluetooth.Utils.CommonUtils;
 import com.lei.bluetooth.Utils.Logs;
 import com.lei.bluetooth.application.BleApplication;
 import com.lei.bluetooth.bean.Model;
@@ -23,10 +24,11 @@ import java.util.Map;
 
 public class NetUtils {
     public static String TAG = NetUtils.class.getSimpleName();
-    public static final String URL = "http://qyu2508740001.my3w.com/index.php/Api/blueTooth?data=1234&imei=1236";
-   // public static final String URL = "http://renrentong.zhiyicx.com/api.php?mod=Weibo&act=getTopics&oauth_token=e61d5360b6001da2a9757a140599695a&oauth_token_secret=7785312ab69a363c4390035817bc6bfb";
+    public static final String URL = "http://qyu2508740001.my3w.com/index.php/Api/blueTooth?data=12,23,12,12,23,6,1,23,2,5,11,23,16,2,21,15,14,1,15,20&imei=" + CommonUtils.getPhoneIMEI();
+    // public static final String URL = "http://renrentong.zhiyicx.com/api.php?mod=Weibo&act=getTopics&oauth_token=e61d5360b6001da2a9757a140599695a&oauth_token_secret=7785312ab69a363c4390035817bc6bfb";
 
     public static void postJsonRequest(final String url, final String data, final String ime, final OnHttpCompleteListener listener) {
+        Logs.v(URL);
         JsonObjectRequest jsonObjReq = new JsonObjectRequest(Method.GET,
                 URL,
                 new Listener<JSONObject>() {
