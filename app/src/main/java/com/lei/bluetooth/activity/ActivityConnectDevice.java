@@ -108,13 +108,11 @@ public class ActivityConnectDevice extends BaseActivity {
 
     }
 
-    BluetoothGattCharacteristic characteristic = null;
 
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.btn_read:
-                if (characteristic == null) return;
                 Logs.v("read...........");
                 Iterator iterator = charactics.iterator();
                 while (iterator.hasNext()) {
@@ -129,7 +127,6 @@ public class ActivityConnectDevice extends BaseActivity {
                 }
                 Logs.v("send data ..........");
                 String data = String.valueOf(et_send.getText());
-                characteristic.setValue(TextUtils.isEmpty(data) ? "test" : data);
                 mBluetoothLeService.WriteValue(data);
                 break;
         }

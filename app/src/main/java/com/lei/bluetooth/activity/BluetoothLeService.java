@@ -137,6 +137,10 @@ public class BluetoothLeService extends Service {
     };
 
     public void WriteValue(String strValue) {
+        if(mNotifyCharacteristic == null){
+            Log.v(TAG,"mNotifyCharacteristic is null");
+            return;
+        }
         mNotifyCharacteristic.setValue(strValue.getBytes());
         mBluetoothGatt.writeCharacteristic(mNotifyCharacteristic);
     }
@@ -204,9 +208,9 @@ public class BluetoothLeService extends Service {
             format = BluetoothGattCharacteristic.FORMAT_UINT8;
             Log.d(TAG, "Heart rate format UINT8.");
         }
-        final int heartRate = characteristic.getIntValue(format, 1);
-        Log.d(TAG, String.format("Received heart rate: %d", heartRate));
-        intent.putExtra(EXTRA_DATA, String.valueOf(heartRate));
+//        final int heartRate = characteristic.getIntValue(format, 1);
+//        Log.d(TAG, String.format("Received heart rate: %d", heartRate));
+//        intent.putExtra(EXTRA_DATA, String.valueOf(heartRate));
         // } else {
         // For all other profiles, writes the data formatted in HEX.对于所有的文件，写入十六进制格式的文件
         //这里读取到数据
@@ -214,6 +218,8 @@ public class BluetoothLeService extends Service {
         for (int i = 0; i < data.length; i++) {
             System.out.println("data......" + data[i]);
         }
+
+        String value = Integer.valueOf(new String (data).substring(2),16).toString();
         if (data != null && data.length > 0) {
             final StringBuilder stringBuilder = new StringBuilder(data.length);
             for (byte byteChar : data)
@@ -227,7 +233,7 @@ public class BluetoothLeService extends Service {
 
 //            byte[] heartRate = characteristic.getValue();
 //            String s = CommonUtils.byte2HexStr(heartRate);
-        Log.v(TAG, "   string:    " + new String(data));
+        Log.v(TAG, "   string:    " + new String(data)+" value: "+value);
         //String data = CommonUtils.print10(s);
 //            if (s != null) {
 //                intent.putExtra(EXTRA_DATA, s);
