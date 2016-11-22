@@ -20,6 +20,7 @@ import android.util.Log;
 import com.lei.bluetooth.Utils.CommonUtils;
 import com.lei.bluetooth.Utils.ToastUtils;
 
+import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 
@@ -52,6 +53,7 @@ public class BluetoothLeService extends Service {
     public final static UUID UUID_SERVICE =
             UUID.fromString("0000ffe0-0000-1000-8000-00805f9b34fb");
     BluetoothGattCharacteristic mNotifyCharacteristic;
+    List<Integer> receivedData = new LinkedList<>();
 
 
     // Implements callback methods for GATT events that the app cares about. For
@@ -81,12 +83,9 @@ public class BluetoothLeService extends Service {
 
         @Override
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {
-            // bluetoothGattService = gatt.getServices();
             Log.w(TAG, "onServicesDiscovered:  " + status + " " + gatt.getServices().size());
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 findService(gatt.getServices());
-//                ToastUtils.showToastShort(BluetoothLeService.this, "onServicesDiscovered");
-                //  broadcastUpdate(ACTION_GATT_SERVICES_DISCOVERED);
             } else {
                 Log.w(TAG, "onServicesDiscovered received: " + status);
             }
@@ -136,9 +135,9 @@ public class BluetoothLeService extends Service {
         }
     };
 
-    public void WriteValue(String strValue) {
-        if(mNotifyCharacteristic == null){
-            Log.v(TAG,"mNotifyCharacteristic is null");
+    public void writeValue(String strValue) {
+        if (mNotifyCharacteristic == null) {
+            Log.v(TAG, "mNotifyCharacteristic is null");
             return;
         }
         mNotifyCharacteristic.setValue(strValue.getBytes());
@@ -147,20 +146,16 @@ public class BluetoothLeService extends Service {
 
     public void findService(List<BluetoothGattService> gattServices) {
         Log.i(TAG, "Count is:" + gattServices.size());
-        for (BluetoothGattService gattService : gattServices) {
+        for (BluetoothGattService gattService : gattServices) {//遍历处所有的service
             Log.i(TAG, gattService.getUuid().toString());
-            Log.i(TAG, UUID_SERVICE.toString());
-            Log.i(TAG, " TYPE " + gattService.getInstanceId());
-            if (gattService.getUuid().toString().equalsIgnoreCase(UUID_SERVICE.toString())) {
+            if (String.valueOf(gattService.getUuid()).equalsIgnoreCase(String.valueOf(UUID_SERVICE))) {
                 List<BluetoothGattCharacteristic> gattCharacteristics =
                         gattService.getCharacteristics();
                 Log.i(TAG, "Count is:" + gattCharacteristics.size());
                 for (BluetoothGattCharacteristic gattCharacteristic :
-                        gattCharacteristics) {
-                    Log.i(TAG, "gattCharacteristic property  " + gattCharacteristic.getPermissions());
-                    if (gattCharacteristic.getUuid().toString().equalsIgnoreCase(UUID_NOTIFY.toString())) {
+                        gattCharacteristics) {///遍历 Characteristic
+                    if (String.valueOf(gattCharacteristic.getUuid()).equalsIgnoreCase(String.valueOf(UUID_NOTIFY))) {
                         Log.i(TAG, gattCharacteristic.getUuid().toString());
-                        Log.i(TAG, UUID_NOTIFY.toString());
                         mNotifyCharacteristic = gattCharacteristic;
                         setCharacteristicNotification(gattCharacteristic, true);
                         broadcastUpdate(ACTION_GATT_SERVICES_DISCOVERED);
@@ -178,6 +173,8 @@ public class BluetoothLeService extends Service {
             return;
         }
         mBluetoothGatt.setCharacteristicNotification(characteristic, enabled);
+        mBluetoothGatt.writeCharacteristic(characteristic);
+        writeValue("O");//通知下机位准备好接受数据
 /*
         // This is specific to Heart Rate Measurement.
         if (UUID_HEART_RATE_MEASUREMENT.equals(characteristic.getUuid())) {
@@ -219,26 +216,39 @@ public class BluetoothLeService extends Service {
             System.out.println("data......" + data[i]);
         }
 
-        String value = Integer.valueOf(new String (data).substring(2),16).toString();
+
         if (data != null && data.length > 0) {
-            final StringBuilder stringBuilder = new StringBuilder(data.length);
-            for (byte byteChar : data)
-                //以十六进制的形式输出
-                stringBuilder.append(String.format("%02X ", byteChar));
-            // intent.putExtra(EXTRA_DATA, new String(data) + "\n" + stringBuilder.toString());
-            intent.putExtra(EXTRA_DATA, new String(data));
+            //以十六进制的形式输出
+            String str = CommonUtils.bytes2HexString(data);
+            intent.putExtra(EXTRA_DATA, str);
+            saveData(str);
             sendBroadcast(intent);
         }
 
 
-//            byte[] heartRate = characteristic.getValue();
-//            String s = CommonUtils.byte2HexStr(heartRate);
-        Log.v(TAG, "   string:    " + new String(data)+" value: "+value);
-        //String data = CommonUtils.print10(s);
-//            if (s != null) {
-//                intent.putExtra(EXTRA_DATA, s);
-//            }
+    }
 
+    private void saveData(String data) {
+        try {
+            if (data.startsWith("0x")) {
+                int value = Integer.valueOf(new String(data).substring(2), 16);
+                receivedData.add(value);
+                if (receivedData.size() >= 48) {
+                    Log.v(TAG, "saveData >=48  size = " + receivedData.size());
+                    int sum = 0;
+                    for (int i = 0; i < 47; i++) {
+                        sum += receivedData.get(i);
+                    }
+                    if (sum == receivedData.get(47)) {
+                        writeValue("Y");
+
+                    }
+                }
+            }
+        } catch (NumberFormatException e) {
+            e.printStackTrace();
+            Log.v(TAG, "saveData  NumberFormatException...");
+        }
     }
 
     public class LocalBinder extends Binder {
