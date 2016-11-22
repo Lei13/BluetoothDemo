@@ -18,6 +18,7 @@ import android.os.IBinder;
 import android.util.Log;
 
 import com.lei.bluetooth.Utils.CommonUtils;
+import com.lei.bluetooth.Utils.Logs;
 import com.lei.bluetooth.Utils.ToastUtils;
 
 import java.util.LinkedList;
@@ -47,7 +48,7 @@ public class BluetoothLeService extends Service {
     public final static String ACTION_GATT_SERVICES_DISCOVERED = "com.lei.bledemo.ACTION_GATT_SERVICES_DISCOVERED";
     public final static String ACTION_DATA_AVAILABLE = "com.lei.bledemo.ACTION_DATA_AVAILABLE";
     public final static String EXTRA_DATA = "com.lei.bledemo.EXTRA_DATA";
-
+//0000ff02-0000-1000-8000-00805f9b34fb
     public final static UUID UUID_NOTIFY =
             UUID.fromString("0000ffe1-0000-1000-8000-00805f9b34fb");
     public final static UUID UUID_SERVICE =
@@ -147,15 +148,16 @@ public class BluetoothLeService extends Service {
     public void findService(List<BluetoothGattService> gattServices) {
         Log.i(TAG, "Count is:" + gattServices.size());
         for (BluetoothGattService gattService : gattServices) {//遍历处所有的service
-            Log.i(TAG, gattService.getUuid().toString());
+            Log.i(TAG, "BluetoothGattService   "+gattService.getUuid().toString());
             if (String.valueOf(gattService.getUuid()).equalsIgnoreCase(String.valueOf(UUID_SERVICE))) {
                 List<BluetoothGattCharacteristic> gattCharacteristics =
                         gattService.getCharacteristics();
                 Log.i(TAG, "Count is:" + gattCharacteristics.size());
                 for (BluetoothGattCharacteristic gattCharacteristic :
                         gattCharacteristics) {///遍历 Characteristic
+                    Log.i(TAG,"BluetoothGattCharacteristic:   "+ gattCharacteristic.getUuid().toString());
                     if (String.valueOf(gattCharacteristic.getUuid()).equalsIgnoreCase(String.valueOf(UUID_NOTIFY))) {
-                        Log.i(TAG, gattCharacteristic.getUuid().toString());
+
                         mNotifyCharacteristic = gattCharacteristic;
                         setCharacteristicNotification(gattCharacteristic, true);
                         broadcastUpdate(ACTION_GATT_SERVICES_DISCOVERED);
@@ -164,6 +166,7 @@ public class BluetoothLeService extends Service {
                 }
             }
         }
+        writeValue("O");//通知下机位准备好接受数据
     }
 
     public void setCharacteristicNotification(BluetoothGattCharacteristic characteristic,
@@ -173,17 +176,22 @@ public class BluetoothLeService extends Service {
             return;
         }
         mBluetoothGatt.setCharacteristicNotification(characteristic, enabled);
-        mBluetoothGatt.writeCharacteristic(characteristic);
-        writeValue("O");//通知下机位准备好接受数据
-/*
+
+        //00002902-0000-1000-8000-00805f9b34fb
+        //00002901-0000-1000-8000-00805f9b34fb
+
         // This is specific to Heart Rate Measurement.
-        if (UUID_HEART_RATE_MEASUREMENT.equals(characteristic.getUuid())) {
-            BluetoothGattDescriptor descriptor = characteristic.getDescriptor(
-                    UUID.fromString(SampleGattAttributes.CLIENT_CHARACTERISTIC_CONFIG));
+        // if ("00002901-0000-1000-8000-00805f9b34fb".equals(characteristic.getUuid())) {
+        BluetoothGattDescriptor descriptor = characteristic.getDescriptor(
+                UUID.fromString("00002902-0000-1000-8000-00805f9b34fb"));
+        if (descriptor != null) {
             descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
             mBluetoothGatt.writeDescriptor(descriptor);
         }
-        */
+        //  }
+
+      //  mBluetoothGatt.writeCharacteristic(characteristic);
+
     }
 
     private void broadcastUpdate(final String action) {
@@ -244,6 +252,8 @@ public class BluetoothLeService extends Service {
 
                     }
                 }
+            } else {
+
             }
         } catch (NumberFormatException e) {
             e.printStackTrace();
@@ -397,6 +407,10 @@ public class BluetoothLeService extends Service {
             return;
         }
         mBluetoothGatt.readCharacteristic(characteristic);
+    }
+
+    public void read() {
+        readCharacteristic(mNotifyCharacteristic);
     }
 
     /**
