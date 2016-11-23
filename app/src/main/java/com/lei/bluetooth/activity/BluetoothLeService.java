@@ -14,7 +14,9 @@ import android.bluetooth.BluetoothProfile;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Binder;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Message;
 import android.util.Log;
 
 import com.lei.bluetooth.Utils.CommonUtils;
@@ -32,6 +34,13 @@ import java.util.UUID;
 @SuppressLint("NewApi")
 public class BluetoothLeService extends Service {
     private final static String TAG = BluetoothLeService.class.getSimpleName();
+    private Handler mHandler = new Handler() {
+        @Override
+        public void handleMessage(Message msg) {
+            super.handleMessage(msg);
+            writeValue("O");//通知下机位准备好接受数据
+        }
+    };
 
     private BluetoothManager mBluetoothManager;
     private BluetoothAdapter mBluetoothAdapter;
@@ -48,7 +57,7 @@ public class BluetoothLeService extends Service {
     public final static String ACTION_GATT_SERVICES_DISCOVERED = "com.lei.bledemo.ACTION_GATT_SERVICES_DISCOVERED";
     public final static String ACTION_DATA_AVAILABLE = "com.lei.bledemo.ACTION_DATA_AVAILABLE";
     public final static String EXTRA_DATA = "com.lei.bledemo.EXTRA_DATA";
-//0000ff02-0000-1000-8000-00805f9b34fb
+    //0000ff02-0000-1000-8000-00805f9b34fb
     public final static UUID UUID_NOTIFY =
             UUID.fromString("0000ffe1-0000-1000-8000-00805f9b34fb");
     public final static UUID UUID_SERVICE =
@@ -86,7 +95,7 @@ public class BluetoothLeService extends Service {
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {
             Log.w(TAG, "onServicesDiscovered:  " + status + " " + gatt.getServices().size());
             if (status == BluetoothGatt.GATT_SUCCESS) {
-                findService(gatt.getServices());
+                findService(mBluetoothGatt.getServices());
             } else {
                 Log.w(TAG, "onServicesDiscovered received: " + status);
             }
@@ -148,25 +157,32 @@ public class BluetoothLeService extends Service {
     public void findService(List<BluetoothGattService> gattServices) {
         Log.i(TAG, "Count is:" + gattServices.size());
         for (BluetoothGattService gattService : gattServices) {//遍历处所有的service
-            Log.i(TAG, "BluetoothGattService   "+gattService.getUuid().toString());
+            Log.i(TAG, "BluetoothGattService   " + gattService.getUuid().toString());
             if (String.valueOf(gattService.getUuid()).equalsIgnoreCase(String.valueOf(UUID_SERVICE))) {
                 List<BluetoothGattCharacteristic> gattCharacteristics =
                         gattService.getCharacteristics();
                 Log.i(TAG, "Count is:" + gattCharacteristics.size());
                 for (BluetoothGattCharacteristic gattCharacteristic :
                         gattCharacteristics) {///遍历 Characteristic
-                    Log.i(TAG,"BluetoothGattCharacteristic:   "+ gattCharacteristic.getUuid().toString());
+                    Log.i(TAG, "BluetoothGattCharacteristic:   " + gattCharacteristic.getUuid().toString());
                     if (String.valueOf(gattCharacteristic.getUuid()).equalsIgnoreCase(String.valueOf(UUID_NOTIFY))) {
 
                         mNotifyCharacteristic = gattCharacteristic;
                         setCharacteristicNotification(gattCharacteristic, true);
                         broadcastUpdate(ACTION_GATT_SERVICES_DISCOVERED);
+                        mHandler.postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                mHandler.sendEmptyMessage(0);
+
+                            }
+                        }, 1000);
                         return;
                     }
                 }
             }
         }
-        writeValue("O");//通知下机位准备好接受数据
+
     }
 
     public void setCharacteristicNotification(BluetoothGattCharacteristic characteristic,
@@ -175,7 +191,7 @@ public class BluetoothLeService extends Service {
             Log.w(TAG, "BluetoothAdapter not initialized");
             return;
         }
-        mBluetoothGatt.setCharacteristicNotification(characteristic, enabled);
+
 
         //00002902-0000-1000-8000-00805f9b34fb
         //00002901-0000-1000-8000-00805f9b34fb
@@ -184,14 +200,15 @@ public class BluetoothLeService extends Service {
         // if ("00002901-0000-1000-8000-00805f9b34fb".equals(characteristic.getUuid())) {
         BluetoothGattDescriptor descriptor = characteristic.getDescriptor(
                 UUID.fromString("00002902-0000-1000-8000-00805f9b34fb"));
-        if (descriptor != null) {
-            descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
-            mBluetoothGatt.writeDescriptor(descriptor);
-        }
+//        if (descriptor != null) {
+//            descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+//            mBluetoothGatt.writeDescriptor(descriptor);
+//        }
         //  }
 
-      //  mBluetoothGatt.writeCharacteristic(characteristic);
-
+        //  mBluetoothGatt.writeCharacteristic(characteristic);
+        boolean flag = mBluetoothGatt.setCharacteristicNotification(characteristic, true);
+        Log.v(TAG, "notify flag   " + flag);
     }
 
     private void broadcastUpdate(final String action) {
@@ -238,19 +255,21 @@ public class BluetoothLeService extends Service {
 
     private void saveData(String data) {
         try {
-            if (data.startsWith("0x")) {
-                int value = Integer.valueOf(new String(data).substring(2), 16);
-                receivedData.add(value);
-                if (receivedData.size() >= 48) {
-                    Log.v(TAG, "saveData >=48  size = " + receivedData.size());
-                    int sum = 0;
-                    for (int i = 0; i < 47; i++) {
-                        sum += receivedData.get(i);
-                    }
-                    if (sum == receivedData.get(47)) {
-                        writeValue("Y");
-
-                    }
+            int value = Integer.valueOf(data, 16);
+            Log.v(TAG, "value   " + value);
+            receivedData.add(value);
+            if (receivedData.size() >= 25) {
+                Log.v(TAG, "saveData >=48  size = " + receivedData.size());
+                int sum = 0;
+                for (int i = 0; i < 47; i++) {
+                    sum += receivedData.get(i);
+                }
+                if (sum == receivedData.get(47)) {
+                    writeValue("Y");
+                    uploadDataToService();
+                } else {
+                    receivedData.clear();
+                    writeValue("N");
                 }
             } else {
 
@@ -259,6 +278,9 @@ public class BluetoothLeService extends Service {
             e.printStackTrace();
             Log.v(TAG, "saveData  NumberFormatException...");
         }
+    }
+
+    private void uploadDataToService() {
     }
 
     public class LocalBinder extends Binder {
@@ -279,6 +301,7 @@ public class BluetoothLeService extends Service {
         // such that resources are cleaned up properly. In this particular
         // example, close() is
         // invoked when the UI is disconnected from the Service.
+        disconnect();
         close();
         return super.onUnbind(intent);
     }

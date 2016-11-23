@@ -66,6 +66,7 @@ public class ActivityBluetoothList extends BaseActivity implements AdapterView.O
         tv_search = (TextView) findViewById(R.id.tv_search);
         btn_bluetooth_switch = (Button) findViewById(R.id.btn_bluetooth_switch);
         setScan(false);
+        initBluetooth();
     }
 
     private void initBluetooth() {

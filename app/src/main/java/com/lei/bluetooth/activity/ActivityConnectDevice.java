@@ -39,7 +39,6 @@ public class ActivityConnectDevice extends BaseActivity {
     private ListView listview;
 
     private boolean mConnected = false;
-    private Set<BluetoothGattCharacteristic> charactics;
 
 
     // Code to manage Service lifecycle.
@@ -91,7 +90,6 @@ public class ActivityConnectDevice extends BaseActivity {
         et_send = (EditText) findViewById(R.id.et_send);
         btn_send = (Button) findViewById(R.id.btn_send);
         listview = (ListView) findViewById(R.id.listview);
-        charactics = new HashSet<>();
         registerBluetoothReceiver();
         Intent gattServiceIntent = new Intent(this, BluetoothLeService.class);
         boolean bll = bindService(gattServiceIntent, mServiceConnection,

@@ -72,7 +72,22 @@ public class CommonUtils {
         return buff.toString();
     }
 
-
+    /**
+     * 字符串转16进制
+     * @param s
+     * @return
+     */
+    public static String toHexString(String s)
+    {
+        String str="";
+        for (int i=0;i<s.length();i++)
+        {
+            int ch = (int)s.charAt(i);
+            String s4 = Integer.toHexString(ch);
+            str = str + s4;
+        }
+        return str;
+    }
     public static String getPhoneIMEI() {
         TelephonyManager manager = (TelephonyManager) BleApplication.getInstance().getSystemService(Context.TELEPHONY_SERVICE);
         return manager.getDeviceId();
