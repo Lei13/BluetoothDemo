@@ -82,6 +82,8 @@ public class ActivityConnectDevice extends BaseActivity {
 
     @Override
     protected void initView() {
+        tv_center.setText(mDeviceName);
+
         tv_device_info = (TextView) findViewById(R.id.tv_device_info);
         tv_data = (TextView) findViewById(R.id.tv_data);
         tv_connect_state = (TextView) findViewById(R.id.tv_connect_state);
@@ -127,7 +129,7 @@ public class ActivityConnectDevice extends BaseActivity {
                 }
                 Logs.v("send data ..........");
                 String data = String.valueOf(et_send.getText());
-                mBluetoothLeService.WriteValue(data);
+                mBluetoothLeService.writeValue(data);
                 break;
         }
     }

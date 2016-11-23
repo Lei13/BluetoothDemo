@@ -1,14 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical">
+
+    <include layout="@layout/title" />
 
     <Button
         android:id="@+id/btn_bluetooth_switch"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="switch off" />
+        android:text="switch off"
+        android:visibility="gone" />
 
     <TextView
         android:id="@+id/tv_search"
@@ -16,15 +19,21 @@
         android:layout_height="wrap_content"
         android:layout_alignBottom="@id/btn_bluetooth_switch"
         android:layout_alignTop="@id/btn_bluetooth_switch"
+        android:layout_marginLeft="12dp"
+        android:layout_marginTop="10dp"
         android:layout_toRightOf="@id/btn_bluetooth_switch"
+        android:background="@color/mainColor"
         android:gravity="center"
         android:padding="10dp"
-        android:text="search bluetooth" />
+        android:text="扫描蓝牙设备"
+        android:textColor="@color/white"
+        android:textSize="16sp" />
 
     <ListView
         android:id="@+id/lv_bluetooth_list"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@id/btn_bluetooth_switch"></ListView>
+        android:layout_below="@id/btn_bluetooth_switch"
+        android:layout_marginTop="10dp"></ListView>
 
-</RelativeLayout>
+</LinearLayout>

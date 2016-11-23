@@ -9,11 +9,13 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v7.app.AlertDialog;
 import android.text.TextUtils;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -41,9 +43,10 @@ public class ActivityBluetoothList extends BaseActivity implements AdapterView.O
     private BluetoothAdapter bluetoothAdapter;
     private AdapterDeviceList adapter;
     private boolean mScanning;
-    private boolean isOpen = false;
     private List<Model> deviceList = new ArrayList<>();
     private static final int PERMISSION_REQUEST_COARSE_LOCATION = 1;
+
+    private Handler mHandler = new Handler();
 
     @Override
     protected int getLayoutId() {
@@ -58,6 +61,7 @@ public class ActivityBluetoothList extends BaseActivity implements AdapterView.O
 
     @Override
     protected void initView() {
+        tv_center.setText("设备列表");
         lv_list = (ListView) findViewById(R.id.lv_bluetooth_list);
         tv_search = (TextView) findViewById(R.id.tv_search);
         btn_bluetooth_switch = (Button) findViewById(R.id.btn_bluetooth_switch);
@@ -76,15 +80,15 @@ public class ActivityBluetoothList extends BaseActivity implements AdapterView.O
         }
         //确认开启蓝牙
         if (!bluetoothAdapter.isEnabled()) {
-            //请求用户开启
-            Intent intent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-            startActivityForResult(intent, RESULT_FIRST_USER);
-            //使蓝牙设备可见，方便配对
-            Intent in = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
-            in.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 200);
-            startActivity(in);
-            //直接开启，不经过提示
-            isOpen = bluetoothAdapter.enable();
+//            //请求用户开启
+//            Intent intent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+//            startActivityForResult(intent, RESULT_FIRST_USER);
+//            //使蓝牙设备可见，方便配对
+//            Intent in = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
+//            in.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 200);
+//            startActivity(in);
+//            //直接开启，不经过提示
+            bluetoothAdapter.enable();
         }
     }
 
@@ -103,8 +107,7 @@ public class ActivityBluetoothList extends BaseActivity implements AdapterView.O
     }
 
     private void doScanDevce() {
-        if (bluetoothAdapter == null || !isOpen) {
-            ToastUtils.showToastShort(this, "请打开蓝牙设备");
+        if (bluetoothAdapter == null) {
             return;
         }
         setScan(true);
@@ -133,27 +136,31 @@ public class ActivityBluetoothList extends BaseActivity implements AdapterView.O
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.tv_search:
-                if (!isOpen) {
-                    ToastUtils.showToastShort(this, "请先打开蓝牙");
-                    return;
-                }
                 if (mScanning) {//在扫描
                     setScan(false);
-                    if (bluetoothAdapter != null)
-                        bluetoothAdapter.startLeScan(leScanCallback);
+                    if (bluetoothAdapter != null) {
+                        mHandler.postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                mScanning = true;
+                                bluetoothAdapter.startLeScan(leScanCallback);
+                            }
+                        }, 1000);
+
+                    }
                 } else//没有打开扫描
                     doScanDevce();
                 break;
             case R.id.btn_bluetooth_switch:
-                if (isOpen) {//打开状态
-                    isOpen = false;
-                    if (mScanning)
-                        bluetoothAdapter.stopLeScan(leScanCallback);
-                    bluetoothAdapter.disable();
-                } else {//关闭状态
-                    initBluetooth();
-                }
-                setSwitchData();
+//                if (isOpen) {//打开状态
+//                    isOpen = false;
+//                    if (mScanning)
+//                        bluetoothAdapter.stopLeScan(leScanCallback);
+//                    bluetoothAdapter.disable();
+//                } else {//关闭状态
+//                    initBluetooth();
+//                }
+//                setSwitchData();
                 break;
         }
     }
@@ -177,8 +184,8 @@ public class ActivityBluetoothList extends BaseActivity implements AdapterView.O
     @Override
     protected void onResume() {
         super.onResume();
-        if (bluetoothAdapter != null && isOpen && !bluetoothAdapter.isEnabled()) {
-            if (bluetoothAdapter != null && isOpen && !bluetoothAdapter.isEnabled()) {
+        if (bluetoothAdapter != null && !bluetoothAdapter.isEnabled()) {
+            if (bluetoothAdapter != null && !bluetoothAdapter.isEnabled()) {
                 Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
                 startActivityForResult(enableBtIntent, 1);
             }
@@ -229,17 +236,16 @@ public class ActivityBluetoothList extends BaseActivity implements AdapterView.O
      */
     private void setScan(boolean isScaning) {
         mScanning = isScaning;
-        if (mScanning) {
-            tv_search.setText("stop search");
-        } else {
-            tv_search.setText("do search");
-        }
+//        if (mScanning) {
+//            tv_search.setText("stop search");
+//        } else {
+//            tv_search.setText("do search");
+//        }
     }
 
     private void setSwitchData() {
-        if (isOpen)
-            btn_bluetooth_switch.setText("switch off");
-        else
-            btn_bluetooth_switch.setText("switch on");
+//            btn_bluetooth_switch.setText("switch off");
+//        else
+//            btn_bluetooth_switch.setText("switch on");
     }
 }
