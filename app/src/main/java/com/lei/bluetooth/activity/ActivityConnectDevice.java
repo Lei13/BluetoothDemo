@@ -115,11 +115,7 @@ public class ActivityConnectDevice extends BaseActivity {
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.btn_read:
-                Logs.v("read...........");
-                Iterator iterator = charactics.iterator();
-                while (iterator.hasNext()) {
-                    mBluetoothLeService.readCharacteristic((BluetoothGattCharacteristic) iterator.next());
-                }
+                mBluetoothLeService.read();
                 break;
             case R.id.btn_send:
                 if (mBluetoothLeService == null) {
