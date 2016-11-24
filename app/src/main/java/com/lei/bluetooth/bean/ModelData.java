@@ -2,6 +2,8 @@ package com.lei.bluetooth.bean;
 
 import org.json.JSONObject;
 
+import java.util.List;
+
 /**
  * Created by lei on 2016/11/16.
  * 收到数据传到服务器后返回，保存记录
@@ -12,9 +14,10 @@ public class ModelData extends Model {
     private String data;
     private String change_data;
     //蓝牙接受到的原始数据
-    private String oldData;
+    private String oldDataIntStr;
+    private List<String> oldDataHex;
     //保存服务器的一个状态
-    private int status;
+    private int status = 0;
     //收到数据的日期
     private String date;
 
@@ -70,11 +73,36 @@ public class ModelData extends Model {
         this.date = date;
     }
 
-    public String getOldData() {
-        return oldData;
+    public String getOldDataIntStr() {
+        return oldDataIntStr;
     }
 
-    public void setOldData(String oldData) {
-        this.oldData = oldData;
+    public void setOldDataIntStr(String oldDataInt) {
+        this.oldDataIntStr = oldDataInt;
     }
+
+    public List<String> getOldDataHex() {
+        return oldDataHex;
+    }
+
+    public void setOldDataHex(List<String> oldDataHex) {
+        this.oldDataHex = oldDataHex;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        ModelData modelData = (ModelData) o;
+
+        if (oldDataIntStr != null ? !oldDataIntStr.equals(modelData.oldDataIntStr) : modelData.oldDataIntStr != null)
+            return false;
+        if (oldDataHex != null ? !oldDataHex.equals(modelData.oldDataHex) : modelData.oldDataHex != null)
+            return false;
+        return date != null ? date.equals(modelData.date) : modelData.date == null;
+
+    }
+
+
 }

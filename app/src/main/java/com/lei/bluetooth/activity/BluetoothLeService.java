@@ -20,10 +20,13 @@ import android.os.Message;
 import android.util.Log;
 
 import com.lei.bluetooth.Utils.CommonUtils;
-import com.lei.bluetooth.Utils.Logs;
+import com.lei.bluetooth.Utils.SharedPrefUtils;
 import com.lei.bluetooth.Utils.ToastUtils;
+import com.lei.bluetooth.bean.Model;
+import com.lei.bluetooth.bean.ModelData;
+import com.lei.bluetooth.network.NetUtils;
 
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -33,12 +36,20 @@ import java.util.UUID;
  */
 @SuppressLint("NewApi")
 public class BluetoothLeService extends Service {
+    public static final int MSG_UPLOAD = 0X2;
     private final static String TAG = BluetoothLeService.class.getSimpleName();
     private Handler mHandler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
-            writeValue("O");//通知下机位准备好接受数据
+            switch (msg.what) {
+                case MSG_UPLOAD:
+                    break;
+                default:
+                    writeValue("O");//通知下机位准备好接受数据
+                    break;
+            }
+
         }
     };
 
@@ -63,7 +74,8 @@ public class BluetoothLeService extends Service {
     public final static UUID UUID_SERVICE =
             UUID.fromString("0000ffe0-0000-1000-8000-00805f9b34fb");
     BluetoothGattCharacteristic mNotifyCharacteristic;
-    List<Integer> receivedData = new LinkedList<>();
+    private List<Integer> receivedData = new ArrayList<>();
+    private List<String> oldData = new ArrayList<>();
 
 
     // Implements callback methods for GATT events that the app cares about. For
@@ -86,6 +98,8 @@ public class BluetoothLeService extends Service {
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
                 intentAction = ACTION_GATT_DISCONNECTED;
                 mConnectionState = STATE_DISCONNECTED;
+                oldData.clear();
+                receivedData.clear();
                 Log.i(TAG, "Disconnected from GATT server.");
                 broadcastUpdate(intentAction);
             }
@@ -255,6 +269,7 @@ public class BluetoothLeService extends Service {
 
     private void saveData(String data) {
         try {
+            oldData.add(data);
             int value = Integer.valueOf(data, 16);
             Log.v(TAG, "value   " + value);
             receivedData.add(value);
@@ -268,6 +283,7 @@ public class BluetoothLeService extends Service {
                     writeValue("Y");
                     uploadDataToService();
                 } else {
+                    oldData.clear();
                     receivedData.clear();
                     writeValue("N");
                 }
@@ -281,6 +297,14 @@ public class BluetoothLeService extends Service {
     }
 
     private void uploadDataToService() {
+        ModelData data = new ModelData();
+        String str = "";
+        for (int i = 1; i <= 20; i++) {
+            str += receivedData.get(i) + ",";
+        }
+        data.setOldDataIntStr(str.substring(0, str.length() - 1));
+        data.setOldDataHex(oldData);
+        doUploadData(data);
     }
 
     public class LocalBinder extends Binder {
@@ -433,7 +457,8 @@ public class BluetoothLeService extends Service {
     }
 
     public void read() {
-        readCharacteristic(mNotifyCharacteristic);
+        if (mNotifyCharacteristic != null)
+            readCharacteristic(mNotifyCharacteristic);
     }
 
     /**
@@ -480,5 +505,30 @@ public class BluetoothLeService extends Service {
             return false;
 
         return mBluetoothGatt.readRemoteRssi();
+    }
+
+    /**
+     * 保存服务器
+     *
+     * @param modelData
+     */
+    private void doUploadData(final ModelData modelData) {
+        modelData.setDate(String.valueOf(System.currentTimeMillis() / 1000));
+        NetUtils.uploadDada(modelData.getOldDataIntStr(), new NetUtils.OnHttpCompleteListener() {
+            @Override
+            public void onSuccess(Model model) {
+                ModelData saveData = (ModelData) model;
+                saveData.setOldDataIntStr(modelData.getOldDataIntStr());
+                saveData.setDate(modelData.getDate());
+                SharedPrefUtils.saveDataItem(saveData);
+                ToastUtils.showToastShort(BluetoothLeService.this, "保存数据成功");
+            }
+
+            @Override
+            public void onFailure(Object object) {
+                ToastUtils.showToastShort(BluetoothLeService.this, "保存数据失败");
+                SharedPrefUtils.saveDataItem(modelData);
+            }
+        });
     }
 }

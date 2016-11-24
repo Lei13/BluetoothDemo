@@ -35,7 +35,7 @@ public class ActivityConnectDevice extends BaseActivity {
     private BluetoothLeService mBluetoothLeService;
     private ArrayList<ArrayList<BluetoothGattCharacteristic>> mGattCharacteristics = new ArrayList<ArrayList<BluetoothGattCharacteristic>>();
     private EditText et_send;
-    private Button btn_send, btn_read;
+    private Button btn_send, btn_read, btn_connect;
     private ListView listview;
 
     private boolean mConnected = false;
@@ -90,6 +90,7 @@ public class ActivityConnectDevice extends BaseActivity {
         et_send = (EditText) findViewById(R.id.et_send);
         btn_send = (Button) findViewById(R.id.btn_send);
         listview = (ListView) findViewById(R.id.listview);
+        btn_connect = (Button) findViewById(R.id.btn_connect);
         registerBluetoothReceiver();
         Intent gattServiceIntent = new Intent(this, BluetoothLeService.class);
         boolean bll = bindService(gattServiceIntent, mServiceConnection,
@@ -100,6 +101,7 @@ public class ActivityConnectDevice extends BaseActivity {
     protected void initListener() {
         btn_send.setOnClickListener(this);
         btn_read.setOnClickListener(this);
+        btn_connect.setOnClickListener(this);
     }
 
     @Override
@@ -125,6 +127,11 @@ public class ActivityConnectDevice extends BaseActivity {
                 String data = String.valueOf(et_send.getText());
                 mBluetoothLeService.writeValue(data);
                 break;
+            case R.id.btn_connect:
+                if (mBluetoothLeService != null) {
+                    mBluetoothLeService.connect(mDeviceAddress);
+                }
+                break;
         }
     }
 
@@ -149,11 +156,13 @@ public class ActivityConnectDevice extends BaseActivity {
             if (BluetoothLeService.ACTION_GATT_CONNECTED.equals(action)) {//匹配连接成功
                 mConnected = true;
                 tv_connect_state.setText("connect");
+                btn_connect.setVisibility(View.GONE);
             } else if (BluetoothLeService.ACTION_GATT_DISCONNECTED.equals(action)) {//断开连接
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
                         mConnected = false;
+                        btn_connect.setVisibility(View.VISIBLE);
                         tv_connect_state.setText("unconnect");
                     }
                 });

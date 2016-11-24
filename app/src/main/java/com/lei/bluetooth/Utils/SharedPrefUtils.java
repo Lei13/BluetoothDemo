@@ -5,12 +5,15 @@ import android.content.SharedPreferences;
 import android.util.Base64;
 
 import com.lei.bluetooth.application.BleApplication;
+import com.lei.bluetooth.bean.ModelData;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by zycx on 2016/11/17.
@@ -89,5 +92,29 @@ public class SharedPrefUtils {
             e.printStackTrace();
         }
         return device;
+    }
+
+
+    public static void saveDataItem(ModelData data) {
+        if (data == null) return;
+        List<ModelData> list = getObject(Config.SP_NAME_INFO, Config.KEY_INFO);
+        if (list == null) {
+            list = new ArrayList<>();
+        }
+        list.add(0, data);
+        saveObject(Config.SP_NAME_INFO, Config.KEY_INFO, list);
+    }
+
+    public static void replaceItem(ModelData data) {
+        if (data == null) return;
+        List<ModelData> list = getObject(Config.SP_NAME_INFO, Config.KEY_INFO);
+        if (list == null) return;
+        for (int i = 0; i < list.size() - 1; i++) {
+            if (data.equals(list.get(i))) {
+                list.set(i, data);
+                break;
+            }
+        }
+        saveObject(Config.SP_NAME_INFO, Config.KEY_INFO, list);
     }
 }

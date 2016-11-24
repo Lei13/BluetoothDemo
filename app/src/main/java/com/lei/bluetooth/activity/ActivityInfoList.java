@@ -1,10 +1,9 @@
 package com.lei.bluetooth.activity;
 
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.AdapterView;
 import android.widget.ListView;
+import android.widget.TextView;
 
 import com.lei.bluetooth.R;
 import com.lei.bluetooth.Utils.Config;
@@ -20,6 +19,7 @@ public class ActivityInfoList extends BaseActivity {
     private ListView listview;
     private AdapterReceiveDataList adapter;
     private List<Model> data;
+    private TextView tv_no_content;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,13 +38,20 @@ public class ActivityInfoList extends BaseActivity {
 
     @Override
     protected void initView() {
+        tv_right.setVisibility(View.GONE);
         tv_center.setText("接收信息列表");
         listview = (ListView) findViewById(R.id.listview);
+        tv_no_content = (TextView) findViewById(R.id.tv_no_content);
     }
 
     @Override
     protected void initListener() {
-
+        iv_left.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                finish();
+            }
+        });
     }
 
     @Override
@@ -53,6 +60,8 @@ public class ActivityInfoList extends BaseActivity {
         data = SharedPrefUtils.getObject(Config.SP_NAME_INFO, Config.KEY_INFO);
         adapter = new AdapterReceiveDataList(this, data);
         listview.setAdapter(adapter);
+        if (data == null || data.isEmpty())
+            tv_no_content.setVisibility(View.VISIBLE);
     }
 
     @Override

@@ -111,9 +111,13 @@ public class ActivityBluetoothList extends BaseActivity implements AdapterView.O
         if (bluetoothAdapter == null) {
             return;
         }
-        setScan(true);
-        deviceList.clear();
-        bluetoothAdapter.startLeScan(leScanCallback);
+        if (bluetoothAdapter.isEnabled()) {
+            setScan(true);
+            deviceList.clear();
+            bluetoothAdapter.startLeScan(leScanCallback);
+        } else {
+            initBluetooth();
+        }
     }
 
     BluetoothAdapter.LeScanCallback leScanCallback = new BluetoothAdapter.LeScanCallback() {
@@ -169,11 +173,11 @@ public class ActivityBluetoothList extends BaseActivity implements AdapterView.O
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         ModelDevice device = (ModelDevice) parent.getAdapter().getItem(position);
-        if (device != null && !TextUtils.isEmpty(device.getName())) {
+        if (device != null /*&& !TextUtils.isEmpty(device.getName())*/) {
             Intent intent = new Intent(this, ActivityConnectDevice.class);
             intent.putExtra("name", device.getName());
             intent.putExtra("address", device.getAddress());
-            if (mScanning) {
+            if (mScanning && bluetoothAdapter.isEnabled()) {
                 bluetoothAdapter.stopLeScan(leScanCallback);
                 mScanning = false;
             }

@@ -4,14 +4,24 @@
     android:id="@+id/activity_info_list"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:paddingBottom="@dimen/activity_vertical_margin"
-    android:paddingLeft="@dimen/activity_horizontal_margin"
-    android:paddingRight="@dimen/activity_horizontal_margin"
-    android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="com.lei.bluetooth.activity.ActivityInfoList">
+
+    <include
+        android:id="@+id/include_title"
+        layout="@layout/title" />
+
+
     <ListView
         android:id="@+id/listview"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"></ListView>
+        android:layout_height="match_parent"
+        android:layout_below="@id/include_title"></ListView>
 
+    <TextView
+        android:id="@+id/tv_no_content"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:text="还没有收到任何数据"
+        android:visibility="gone" />
 </RelativeLayout>

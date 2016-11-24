@@ -1,5 +1,6 @@
 package com.lei.bluetooth.activity.base;
 
+import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -8,10 +9,11 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.lei.bluetooth.R;
+import com.lei.bluetooth.activity.ActivityInfoList;
 
 public abstract class BaseActivity extends AppCompatActivity implements View.OnClickListener {
-    protected ImageView iv_left, iv_right;
-    protected TextView tv_center;
+    protected ImageView iv_left;
+    protected TextView tv_center, tv_right;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,12 +36,19 @@ public abstract class BaseActivity extends AppCompatActivity implements View.OnC
 
     protected void initTitle() {
         iv_left = (ImageView) findViewById(R.id.iv_left);
-        iv_right = (ImageView) findViewById(R.id.iv_right);
+        tv_right = (TextView) findViewById(R.id.tv_right);
         tv_center = (TextView) findViewById(R.id.tv_center);
         iv_left.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 finish();
+            }
+        });
+        tv_right.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(v.getContext(), ActivityInfoList.class);
+                startActivity(intent);
             }
         });
     }

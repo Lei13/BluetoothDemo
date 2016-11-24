@@ -25,6 +25,7 @@ public abstract class AdapterBase extends BaseAdapter {
         this.context = context;
         this.mData = models;
         inflater = LayoutInflater.from(context);
+        if (models == null) models = new ArrayList<>();
     }
 
     @Override
