@@ -6,7 +6,7 @@
     android:orientation="vertical">
 
     <TextView
-        android:textSize="16sp"
+        android:textSize="14sp"
         android:text="家居风格"
         android:id="@+id/tv_name"
         android:layout_width="wrap_content"
@@ -14,7 +14,7 @@
 
     <TextView
         android:layout_marginTop="5dp"
-        android:textSize="12sp"
+        android:textSize="14sp"
         android:text="家居风格"
         android:id="@+id/tv_address"
         android:layout_width="wrap_content"

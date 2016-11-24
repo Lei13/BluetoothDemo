@@ -2,45 +2,75 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:padding="15dp">
+    android:padding="12dp">
 
     <TextView
         android:id="@+id/tv_date"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="2015-2-12"
+        android:textColor="@color/black"
         android:textSize="14sp" />
+
+    <TextView
+        android:id="@+id/tv_send"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_alignTop="@id/tv_date"
+        android:padding="5dp"
+        android:text="重新发送"
+        android:textSize="11sp"
+        android:textColor="@color/mainColor" />
 
     <TextView
         android:id="@+id/tv_status"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentRight="true"
-        android:text="success"
+        android:text=""
         android:textSize="16sp" />
 
-    <TextView
-        android:id="@+id/tv_old_data"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@id/tv_date"
-        android:text="1,2,5,6,8,7,9,5,,4,"
-        android:textSize="16sp" />
+        android:layout_marginTop="5dp"
+        android:orientation="vertical"
+        android:paddingLeft="2dp">
 
-    <TextView
-        android:id="@+id/tv_change_data"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/tv_old_data"
-        android:text="1222445.25555"
-        android:textSize="18sp" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="转换数据："
+            android:textSize="14sp" />
 
-    <Button
-        android:id="@+id/btn_send"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentRight="true"
-        android:layout_below="@id/tv_change_data"
-        android:text="发送" />
+        <TextView
+            android:id="@+id/tv_change_data"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingLeft="5dp"
+            android:text="1222445.25555"
+            android:textColor="@color/mainColor"
+            android:textSize="16sp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:text="原始数据："
+            android:textSize="14sp" />
+
+        <TextView
+            android:id="@+id/tv_old_data"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/tv_change_data"
+            android:layout_marginTop="5dp"
+            android:paddingLeft="5dp"
+            android:text="1,2,5,6,8,7,9,5,,4,"
+            android:textColor="@color/black"
+            android:textSize="16sp" />
+    </LinearLayout>
 
 </RelativeLayout>

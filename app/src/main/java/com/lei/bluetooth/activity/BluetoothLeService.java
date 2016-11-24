@@ -38,20 +38,20 @@ import java.util.UUID;
 public class BluetoothLeService extends Service {
     public static final int MSG_UPLOAD = 0X2;
     private final static String TAG = BluetoothLeService.class.getSimpleName();
-    private Handler mHandler = new Handler() {
-        @Override
-        public void handleMessage(Message msg) {
-            super.handleMessage(msg);
-            switch (msg.what) {
-                case MSG_UPLOAD:
-                    break;
-                default:
-                    writeValue("O");//通知下机位准备好接受数据
-                    break;
-            }
-
-        }
-    };
+//    private Handler mHandler = new Handler() {
+//        @Override
+//        public void handleMessage(Message msg) {
+//            super.handleMessage(msg);
+//            switch (msg.what) {
+//                case MSG_UPLOAD:
+//                    break;
+//                default:
+//                    writeValue("O");//通知下机位准备好接受数据
+//                    break;
+//            }
+//
+//        }
+//    };
 
     private BluetoothManager mBluetoothManager;
     private BluetoothAdapter mBluetoothAdapter;
@@ -67,6 +67,7 @@ public class BluetoothLeService extends Service {
     public final static String ACTION_GATT_DISCONNECTED = "com.lei.bledemo.ACTION_GATT_DISCONNECTED";
     public final static String ACTION_GATT_SERVICES_DISCOVERED = "com.lei.bledemo.ACTION_GATT_SERVICES_DISCOVERED";
     public final static String ACTION_DATA_AVAILABLE = "com.lei.bledemo.ACTION_DATA_AVAILABLE";
+    public final static String ACTION_DATA_WRITE = "com.lei.bledemo.ACTION_WRITE_DATA";
     public final static String EXTRA_DATA = "com.lei.bledemo.EXTRA_DATA";
     //0000ff02-0000-1000-8000-00805f9b34fb
     public final static UUID UUID_NOTIFY =
@@ -127,8 +128,12 @@ public class BluetoothLeService extends Service {
         @Override
         public void onCharacteristicWrite(BluetoothGatt gatt,
                                           BluetoothGattCharacteristic characteristic, int status) {
-            Log.d(TAG, "onCharacteristicWrite.... : " + status);
-            System.out.println("--------write success----- status:" + status);
+            Log.d(TAG, "onCharacteristicWrite.... : " + status + CommonUtils.byte2HexStr(characteristic.getValue()));
+            if (status == BluetoothGatt.GATT_SUCCESS) {
+                Intent intent = new Intent(ACTION_DATA_WRITE);
+                intent.putExtra("data", new String(characteristic.getValue()));
+                sendBroadcast(intent);
+            }
         }
 
         ;
@@ -184,13 +189,7 @@ public class BluetoothLeService extends Service {
                         mNotifyCharacteristic = gattCharacteristic;
                         setCharacteristicNotification(gattCharacteristic, true);
                         broadcastUpdate(ACTION_GATT_SERVICES_DISCOVERED);
-                        mHandler.postDelayed(new Runnable() {
-                            @Override
-                            public void run() {
-                                mHandler.sendEmptyMessage(0);
-
-                            }
-                        }, 1000);
+                        writeValue("O");//通知下位机
                         return;
                     }
                 }
@@ -271,15 +270,16 @@ public class BluetoothLeService extends Service {
         try {
             oldData.add(data);
             int value = Integer.valueOf(data, 16);
-            Log.v(TAG, "value   " + value);
+            Log.v(TAG, "STR:  " + data + "   value   " + value);
             receivedData.add(value);
             if (receivedData.size() >= 25) {
                 Log.v(TAG, "saveData >=48  size = " + receivedData.size());
                 int sum = 0;
-                for (int i = 0; i < 47; i++) {
+                for (int i = 0; i < 24; i++) {
                     sum += receivedData.get(i);
+                    Log.v(TAG, "i >=48  " + receivedData.get(i));
                 }
-                if (sum == receivedData.get(47)) {
+                if (sum == receivedData.get(24)) {
                     writeValue("Y");
                     uploadDataToService();
                 } else {
@@ -298,6 +298,7 @@ public class BluetoothLeService extends Service {
 
     private void uploadDataToService() {
         ModelData data = new ModelData();
+        data.setDate(String.valueOf(System.currentTimeMillis()));
         String str = "";
         for (int i = 1; i <= 20; i++) {
             str += receivedData.get(i) + ",";
@@ -513,7 +514,7 @@ public class BluetoothLeService extends Service {
      * @param modelData
      */
     private void doUploadData(final ModelData modelData) {
-        modelData.setDate(String.valueOf(System.currentTimeMillis() / 1000));
+
         NetUtils.uploadDada(modelData.getOldDataIntStr(), new NetUtils.OnHttpCompleteListener() {
             @Override
             public void onSuccess(Model model) {

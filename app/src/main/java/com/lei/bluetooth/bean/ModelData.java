@@ -12,9 +12,9 @@ import java.util.List;
 public class ModelData extends Model {
     //后台返回数据
     private String data;
-    private String change_data;
+    private String change_data = "";
     //蓝牙接受到的原始数据
-    private String oldDataIntStr;
+    private String oldDataIntStr = "";
     private List<String> oldDataHex;
     //保存服务器的一个状态
     private int status = 0;

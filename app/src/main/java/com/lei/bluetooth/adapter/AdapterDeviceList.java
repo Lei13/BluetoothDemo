@@ -32,8 +32,8 @@ public class AdapterDeviceList extends AdapterBase {
         } else
             holder = (ViewHolder) convertView.getTag();
         ModelDevice device = (ModelDevice) getItem(position);
-        holder.tv_name.setText("Name:  " + device.getName() + "     extra_data " + device.getExtraData());
-        holder.tv_address.setText("Address:  "+device.getAddress());
+        holder.tv_name.setText("设备名称:  " + device.getName() + "\nextra_data: " + device.getExtraData());
+        holder.tv_address.setText("设备地址:  "+device.getAddress());
         return convertView;
     }
 

@@ -9,38 +9,59 @@
 
     <include layout="@layout/title" />
 
+
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="5dp"
+        android:layout_marginTop="5dp"
+        android:paddingLeft="12dp">
 
         <TextView
             android:id="@+id/tv_connect_state"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:padding="12dp"
-            android:text="init" />
+            android:text="连接中..."
+            android:textColor="@color/mainColor"
+            android:textSize="14sp" />
 
-        <Button
-            android:id="@+id/btn_connect"
+        <TextView
+            android:id="@+id/tv_connect"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentRight="true"
             android:layout_gravity="right"
             android:layout_marginLeft="100dp"
             android:layout_marginRight="12dp"
-            android:text="重新连接" />
+            android:padding="5dp"
+            android:text="重新连接"
+            android:textColor="@color/mainColor"
+
+            android:textSize="11sp"
+            android:visibility="gone" />
     </RelativeLayout>
 
 
     <TextView
         android:id="@+id/tv_device_info"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:paddingLeft="12dp" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="0.5dp"
+        android:layout_marginLeft="12dp"
+        android:layout_marginRight="15dp"
+        android:layout_marginTop="10dp"
+        android:background="#e8e8e8" />
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:padding="12dp"
+        android:visibility="gone">
 
         <EditText
             android:id="@+id/et_send"
@@ -66,16 +87,49 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="receive data:"
-        android:textSize="18sp" />
+        android:layout_marginTop="5dp"
+        android:paddingLeft="12dp"
+        android:text="发送数据:"
+        android:textSize="12sp" />
 
     <TextView
-        android:id="@+id/tv_data"
+        android:id="@+id/tv_send_data"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:layout_marginTop="5dp"
+        android:paddingLeft="16dp"
+        android:text=""
+        android:textSize="14sp" />
 
-    <ListView
-        android:id="@+id/listview"
+    <View
         android:layout_width="match_parent"
-        android:layout_height="match_parent"></ListView>
+        android:layout_height="0.5dp"
+        android:layout_marginBottom="10dp"
+        android:layout_marginLeft="12dp"
+        android:layout_marginRight="15dp"
+        android:layout_marginTop="10dp"
+        android:background="#e8e8e8" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingLeft="12dp"
+        android:text="接收数据:"
+        android:textSize="12sp" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingLeft="12dp"
+        android:paddingRight="12dp"
+        android:paddingTop="5dp">
+
+        <TextView
+            android:id="@+id/tv_data"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:textSize="14sp" />
+
+    </ScrollView>
 </LinearLayout>
