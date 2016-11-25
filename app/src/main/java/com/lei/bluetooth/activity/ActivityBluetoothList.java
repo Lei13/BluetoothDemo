@@ -256,5 +256,16 @@ public class ActivityBluetoothList extends BaseActivity implements AdapterView.O
         }
     }
 
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (mScanning && bluetoothAdapter.isEnabled()) {
+            if (mScanning) {
+                bluetoothAdapter.stopLeScan(leScanCallback);
+                setScan(false);
+            }
+        }
 
+
+    }
 }
