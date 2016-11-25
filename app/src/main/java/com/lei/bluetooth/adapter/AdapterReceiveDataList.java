@@ -47,11 +47,11 @@ public class AdapterReceiveDataList extends AdapterBase {
         ModelData data = (ModelData) getItem(position);
 
         try {
-            holder.tv_date.setText("时间： "+CommonUtils.friendlyTime(data.getDate()));
+            holder.tv_date.setText("时间： " + CommonUtils.friendlyTime(data.getDate()));
         } catch (Exception e) {
             e.printStackTrace();
         }
-        holder.tv_change_data.setText(TextUtils.isEmpty(data.getChange_data())?" ":(data.getChange_data()));
+        holder.tv_change_data.setText(TextUtils.isEmpty(data.getChange_data()) ? " " : (data.getChange_data()));
         holder.tv_old_data.setText(data.getOldDataHex().toString());
 
         if (data.getStatus() == 1) {//已经存服务器
@@ -84,12 +84,12 @@ public class AdapterReceiveDataList extends AdapterBase {
                 modelData.setChange_data(((ModelData) model).getChange_data());
                 SharedPrefUtils.replaceItem(modelData);
                 replaceItem(modelData);
-                ToastUtils.showToastShort(context, "保存数据成功");
+                ToastUtils.showToastShort(context, "上传服务器成功");
             }
 
             @Override
             public void onFailure(Object object) {
-                ToastUtils.showToastShort(context, "保存数据失败");
+                ToastUtils.showToastShort(context, "上传服务器失败");
             }
         });
     }

@@ -16,6 +16,7 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -38,6 +39,7 @@ import java.util.List;
 public class ActivityBluetoothList extends BaseActivity implements AdapterView.OnItemClickListener {
     private ListView lv_list;
     private Button btn_bluetooth_switch;
+    private LinearLayout ll_scanning;
 
     private TextView tv_search;
     private BluetoothAdapter bluetoothAdapter;
@@ -47,6 +49,7 @@ public class ActivityBluetoothList extends BaseActivity implements AdapterView.O
     private static final int PERMISSION_REQUEST_COARSE_LOCATION = 1;
 
     private Handler mHandler = new Handler();
+    private boolean isFirst = true;
 
     @Override
     protected int getLayoutId() {
@@ -65,6 +68,7 @@ public class ActivityBluetoothList extends BaseActivity implements AdapterView.O
         lv_list = (ListView) findViewById(R.id.lv_bluetooth_list);
         tv_search = (TextView) findViewById(R.id.tv_search);
         btn_bluetooth_switch = (Button) findViewById(R.id.btn_bluetooth_switch);
+        ll_scanning = (LinearLayout) findViewById(R.id.ll_scanning);
         setScan(false);
         initBluetooth();
     }
@@ -147,7 +151,7 @@ public class ActivityBluetoothList extends BaseActivity implements AdapterView.O
                         mHandler.postDelayed(new Runnable() {
                             @Override
                             public void run() {
-                                mScanning = true;
+                                setScan(true);
                                 bluetoothAdapter.startLeScan(leScanCallback);
                             }
                         }, 1000);
@@ -179,7 +183,7 @@ public class ActivityBluetoothList extends BaseActivity implements AdapterView.O
             intent.putExtra("address", device.getAddress());
             if (mScanning && bluetoothAdapter.isEnabled()) {
                 bluetoothAdapter.stopLeScan(leScanCallback);
-                mScanning = false;
+                setScan(false);
             }
             startActivity(intent);
         }
@@ -189,7 +193,11 @@ public class ActivityBluetoothList extends BaseActivity implements AdapterView.O
     @Override
     protected void onResume() {
         super.onResume();
-        if (bluetoothAdapter != null && !bluetoothAdapter.isEnabled()) {
+        if (isFirst) {
+            isFirst = false;
+            if (bluetoothAdapter != null && !bluetoothAdapter.isEnabled())
+                bluetoothAdapter.enable();
+        } else if (bluetoothAdapter != null && !bluetoothAdapter.isEnabled()) {
             if (bluetoothAdapter != null && !bluetoothAdapter.isEnabled()) {
                 Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
                 startActivityForResult(enableBtIntent, 1);
@@ -241,16 +249,12 @@ public class ActivityBluetoothList extends BaseActivity implements AdapterView.O
      */
     private void setScan(boolean isScaning) {
         mScanning = isScaning;
-//        if (mScanning) {
-//            tv_search.setText("stop search");
-//        } else {
-//            tv_search.setText("do search");
-//        }
+        if (mScanning) {
+            ll_scanning.setVisibility(View.VISIBLE);
+        } else {
+            ll_scanning.setVisibility(View.GONE);
+        }
     }
 
-    private void setSwitchData() {
-//            btn_bluetooth_switch.setText("switch off");
-//        else
-//            btn_bluetooth_switch.setText("switch on");
-    }
+
 }

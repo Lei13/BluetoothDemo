@@ -14,9 +14,7 @@ import android.bluetooth.BluetoothProfile;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Binder;
-import android.os.Handler;
 import android.os.IBinder;
-import android.os.Message;
 import android.util.Log;
 
 import com.lei.bluetooth.Utils.CommonUtils;
@@ -36,28 +34,7 @@ import java.util.UUID;
  */
 @SuppressLint("NewApi")
 public class BluetoothLeService extends Service {
-    public static final int MSG_UPLOAD = 0X2;
     private final static String TAG = BluetoothLeService.class.getSimpleName();
-//    private Handler mHandler = new Handler() {
-//        @Override
-//        public void handleMessage(Message msg) {
-//            super.handleMessage(msg);
-//            switch (msg.what) {
-//                case MSG_UPLOAD:
-//                    break;
-//                default:
-//                    writeValue("O");//通知下机位准备好接受数据
-//                    break;
-//            }
-//
-//        }
-//    };
-
-    private BluetoothManager mBluetoothManager;
-    private BluetoothAdapter mBluetoothAdapter;
-    private String mBluetoothDeviceAddress;
-    private BluetoothGatt mBluetoothGatt;
-    private int mConnectionState = STATE_DISCONNECTED;
 
     private static final int STATE_DISCONNECTED = 0;
     private static final int STATE_CONNECTING = 1;
@@ -69,14 +46,25 @@ public class BluetoothLeService extends Service {
     public final static String ACTION_DATA_AVAILABLE = "com.lei.bledemo.ACTION_DATA_AVAILABLE";
     public final static String ACTION_DATA_WRITE = "com.lei.bledemo.ACTION_WRITE_DATA";
     public final static String EXTRA_DATA = "com.lei.bledemo.EXTRA_DATA";
+
     //0000ff02-0000-1000-8000-00805f9b34fb
     public final static UUID UUID_NOTIFY =
             UUID.fromString("0000ffe1-0000-1000-8000-00805f9b34fb");
     public final static UUID UUID_SERVICE =
             UUID.fromString("0000ffe0-0000-1000-8000-00805f9b34fb");
+
+
+    private int mConnectionState = STATE_DISCONNECTED;
+    private BluetoothManager mBluetoothManager;
+    private BluetoothAdapter mBluetoothAdapter;
+    private String mBluetoothDeviceAddress;
+    private BluetoothGatt mBluetoothGatt;
+
+
     BluetoothGattCharacteristic mNotifyCharacteristic;
     private List<Integer> receivedData = new ArrayList<>();
     private List<String> oldData = new ArrayList<>();
+    private int failureCount = 0;//重新接受数据的次数（不能超过三次）
 
 
     // Implements callback methods for GATT events that the app cares about. For
@@ -97,6 +85,7 @@ public class BluetoothLeService extends Service {
                 Log.i(TAG, "Attempting to start service discovery:");
                 broadcastUpdate(intentAction);
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
+                failureCount = 0;
                 intentAction = ACTION_GATT_DISCONNECTED;
                 mConnectionState = STATE_DISCONNECTED;
                 oldData.clear();
@@ -273,20 +262,34 @@ public class BluetoothLeService extends Service {
             Log.v(TAG, "STR:  " + data + "   value   " + value);
             receivedData.add(value);
             if (receivedData.size() >= 25) {
+                failureCount += 1;
                 Log.v(TAG, "saveData >=48  size = " + receivedData.size());
                 int sum = 0;
                 for (int i = 0; i < 24; i++) {
                     sum += receivedData.get(i);
-                    Log.v(TAG, "i >=48  " + receivedData.get(i));
                 }
-                if (sum == receivedData.get(24)) {
+                if (sum == receivedData.get(24)) {//校验成功
+                    failureCount = 0;
+                    ToastUtils.showToastShort(this, "校验成功,即将上传服务器中...");
                     writeValue("Y");
+                    Intent intent = new Intent(ACTION_DATA_AVAILABLE);
+                    intent.putExtra(BluetoothLeService.EXTRA_DATA, "---校验成功----");
+                    sendBroadcast(intent);
                     uploadDataToService();
-                } else {
-                    oldData.clear();
-                    receivedData.clear();
-                    writeValue("N");
+                } else {//校验失败
+                    if (failureCount == 3) {
+                        failureCount = 0;
+                        ToastUtils.showToastShort(this, "连续接受数据三次失败，即将断开连接");
+                    } else {
+                        ToastUtils.showToastShort(this, "校验失败，即将进行下一次接受数据");
+                        writeValue("N");
+                    }
+                    Intent intent = new Intent(ACTION_DATA_AVAILABLE);
+                    sendBroadcast(intent);
+                    intent.putExtra(BluetoothLeService.EXTRA_DATA, "---校验失败----");
                 }
+                oldData.clear();
+                receivedData.clear();
             } else {
 
             }
@@ -522,12 +525,12 @@ public class BluetoothLeService extends Service {
                 saveData.setOldDataIntStr(modelData.getOldDataIntStr());
                 saveData.setDate(modelData.getDate());
                 SharedPrefUtils.saveDataItem(saveData);
-                ToastUtils.showToastShort(BluetoothLeService.this, "保存数据成功");
+                ToastUtils.showToastShort(BluetoothLeService.this, "上传服务器成功");
             }
 
             @Override
             public void onFailure(Object object) {
-                ToastUtils.showToastShort(BluetoothLeService.this, "保存数据失败");
+                ToastUtils.showToastShort(BluetoothLeService.this, "上传服务器失败");
                 SharedPrefUtils.saveDataItem(modelData);
             }
         });
