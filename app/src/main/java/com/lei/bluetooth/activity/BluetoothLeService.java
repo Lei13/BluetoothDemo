@@ -17,6 +17,7 @@ import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
+import android.text.TextUtils;
 import android.util.Log;
 
 import com.lei.bluetooth.Utils.CommonUtils;
@@ -97,7 +98,8 @@ public class BluetoothLeService extends Service {
                 failureCount = 0;
                 intentAction = ACTION_GATT_DISCONNECTED;
                 mConnectionState = STATE_DISCONNECTED;
-
+                oldData.clear();
+                receivedData.clear();
                 Log.i(TAG, "Disconnected from GATT server.");
                 broadcastUpdate(intentAction);
             }
@@ -255,22 +257,32 @@ public class BluetoothLeService extends Service {
         if (data != null && data.length > 0) {
             //以十六进制的形式输出
             String str = CommonUtils.bytes2HexString(data);
-            intent.putExtra(EXTRA_DATA, str);
-            sendBroadcast(intent);
-            saveData(str);
+            //intent.putExtra(EXTRA_DATA, str);
+            //sendBroadcast(intent);
+            saveData(intent, str);
         }
 
 
     }
 
-    private void saveData(String data) {
+    private void saveData(Intent intent1, String data) {
         try {
+            String showStr = data;
+            if (!TextUtils.isEmpty(data) && data.length() == 8) {
+                oldData.clear();
+                receivedData.clear();
+                failureCount += 1;
+                showStr = "第" + failureCount + "次接收数据  \n" + data;
+
+            }
+            intent1.putExtra(EXTRA_DATA, showStr);
+            sendBroadcast(intent1);
             oldData.add(data);
             long value = Long.valueOf(data, 16);
             Log.v(TAG, "STR:  " + data + "   value   " + value);
             receivedData.add(value);
             if (receivedData.size() >= 25) {
-                failureCount += 1;
+
                 Log.v(TAG, "saveData >=48  size = " + receivedData.size());
                 long sum = 0;
                 for (int i = 0; i < 24; i++) {
@@ -291,8 +303,9 @@ public class BluetoothLeService extends Service {
                     sendBroadcast(intent);
                     uploadDataToService(receivedData, oldData);
                     writeValue("Y");
+                    return;
                 } else {//校验失败
-                    if (failureCount == 3) {
+                    if (failureCount >= 3) {
                         failureCount = 0;
                         Message msg1 = Message.obtain();
                         msg1.obj = "连续接受数据三次失败，即将断开连接";
@@ -303,14 +316,22 @@ public class BluetoothLeService extends Service {
                         handler.sendMessage(msg2);
                         writeValue("N");
                     }
+
                     Intent intent = new Intent(ACTION_DATA_AVAILABLE);
                     intent.putExtra(BluetoothLeService.EXTRA_DATA, "---校验失败----校验和： " + sumHex + " 校验值 " + sunRec);
                     sendBroadcast(intent);
                 }
                 oldData.clear();
                 receivedData.clear();
+                return;
             } else {
 
+            }
+            if (failureCount >= 3) {
+                failureCount = 0;
+                Message msg1 = Message.obtain();
+                msg1.obj = "连续接受数据三次失败，即将断开连接";
+                handler.sendMessage(msg1);
             }
         } catch (NumberFormatException e) {
             e.printStackTrace();
@@ -321,7 +342,7 @@ public class BluetoothLeService extends Service {
     private void uploadDataToService(List<Long> receivedDat, List<String> oldDat) {
         Log.d(TAG, "uploadDataToService: " + String.valueOf(receivedDat) + String.valueOf(oldDat));
         ModelData data = new ModelData();
-        data.setDate(String.valueOf(System.currentTimeMillis()/1000));
+        data.setDate(String.valueOf(System.currentTimeMillis() / 1000));
         String str = "";
         for (int i = 1; i <= 20; i++) {
             str += receivedDat.get(i) + ",";

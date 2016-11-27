@@ -93,7 +93,7 @@ public class ActivityBluetoothList extends BaseActivity implements AdapterView.O
 //            in.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 200);
 //            startActivity(in);
 //            //直接开启，不经过提示
-            bluetoothAdapter.enable();
+            //  bluetoothAdapter.enable();
         }
     }
 
@@ -145,6 +145,9 @@ public class ActivityBluetoothList extends BaseActivity implements AdapterView.O
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.tv_search:
+                if (bluetoothAdapter != null && !bluetoothAdapter.isEnabled()) {
+                    bluetoothAdapter.enable();
+                }
                 if (mScanning) {//在扫描
                     setScan(false);
                     if (bluetoothAdapter != null) {
@@ -193,11 +196,12 @@ public class ActivityBluetoothList extends BaseActivity implements AdapterView.O
     @Override
     protected void onResume() {
         super.onResume();
-        if (isFirst) {
-            isFirst = false;
-            if (bluetoothAdapter != null && !bluetoothAdapter.isEnabled())
-                bluetoothAdapter.enable();
-        } else if (bluetoothAdapter != null && !bluetoothAdapter.isEnabled()) {
+//        if (isFirst) {
+//            isFirst = false;
+//            if (bluetoothAdapter != null && !bluetoothAdapter.isEnabled())
+//                bluetoothAdapter.enable();
+//        }
+        if (bluetoothAdapter != null && !bluetoothAdapter.isEnabled()) {
             if (bluetoothAdapter != null && !bluetoothAdapter.isEnabled()) {
                 Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
                 startActivityForResult(enableBtIntent, 1);
@@ -209,8 +213,11 @@ public class ActivityBluetoothList extends BaseActivity implements AdapterView.O
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         // User chose not to enable Bluetooth.
         if (requestCode == 1 && resultCode == Activity.RESULT_CANCELED) {
-            finish();
+            // finish();
+            ToastUtils.showToastShort(this, "开启蓝牙失败");
             return;
+        } else if (requestCode == 1 && requestCode != RESULT_OK) {
+            ToastUtils.showToastShort(this, "开启蓝牙成功");
         }
         super.onActivityResult(requestCode, resultCode, data);
     }
