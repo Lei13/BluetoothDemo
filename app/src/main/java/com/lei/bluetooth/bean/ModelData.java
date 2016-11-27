@@ -20,6 +20,7 @@ public class ModelData extends Model {
     private int status = 0;
     //收到数据的日期
     private String date;
+    private String hexStr;//十六进制 字符串
 
     public ModelData() {
     }
@@ -54,6 +55,10 @@ public class ModelData extends Model {
         return "ModelData{" +
                 "data='" + data + '\'' +
                 ", change_data='" + change_data + '\'' +
+                ", oldDataIntStr='" + oldDataIntStr + '\'' +
+                ", oldDataHex=" + oldDataHex +
+                ", status=" + status +
+                ", date='" + date + '\'' +
                 '}';
     }
 
@@ -104,5 +109,11 @@ public class ModelData extends Model {
 
     }
 
+    public String getHexStr() {
+        return hexStr;
+    }
 
+    public void setHexStr(String hexStr) {
+        this.hexStr = hexStr;
+    }
 }

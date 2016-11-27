@@ -52,7 +52,7 @@ public class AdapterReceiveDataList extends AdapterBase {
             e.printStackTrace();
         }
         holder.tv_change_data.setText(TextUtils.isEmpty(data.getChange_data()) ? " " : (data.getChange_data()));
-        holder.tv_old_data.setText(data.getOldDataHex().toString());
+        holder.tv_old_data.setText(data.getHexStr());
 
         if (data.getStatus() == 1) {//已经存服务器
             holder.tv_send.setVisibility(View.GONE);

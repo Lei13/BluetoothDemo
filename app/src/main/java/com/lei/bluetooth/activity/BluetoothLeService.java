@@ -14,7 +14,9 @@ import android.bluetooth.BluetoothProfile;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Binder;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Message;
 import android.util.Log;
 
 import com.lei.bluetooth.Utils.CommonUtils;
@@ -62,10 +64,17 @@ public class BluetoothLeService extends Service {
 
 
     BluetoothGattCharacteristic mNotifyCharacteristic;
-    private List<Integer> receivedData = new ArrayList<>();
+    private List<Long> receivedData = new ArrayList<>();
     private List<String> oldData = new ArrayList<>();
     private int failureCount = 0;//重新接受数据的次数（不能超过三次）
 
+    private Handler handler = new Handler() {
+        @Override
+        public void handleMessage(Message msg) {
+            super.handleMessage(msg);
+            ToastUtils.showToastShort(BluetoothLeService.this, String.valueOf(msg.obj));
+        }
+    };
 
     // Implements callback methods for GATT events that the app cares about. For
     // example,
@@ -88,8 +97,7 @@ public class BluetoothLeService extends Service {
                 failureCount = 0;
                 intentAction = ACTION_GATT_DISCONNECTED;
                 mConnectionState = STATE_DISCONNECTED;
-                oldData.clear();
-                receivedData.clear();
+
                 Log.i(TAG, "Disconnected from GATT server.");
                 broadcastUpdate(intentAction);
             }
@@ -248,8 +256,8 @@ public class BluetoothLeService extends Service {
             //以十六进制的形式输出
             String str = CommonUtils.bytes2HexString(data);
             intent.putExtra(EXTRA_DATA, str);
-            saveData(str);
             sendBroadcast(intent);
+            saveData(str);
         }
 
 
@@ -258,35 +266,46 @@ public class BluetoothLeService extends Service {
     private void saveData(String data) {
         try {
             oldData.add(data);
-            int value = Integer.valueOf(data, 16);
+            long value = Long.valueOf(data, 16);
             Log.v(TAG, "STR:  " + data + "   value   " + value);
             receivedData.add(value);
             if (receivedData.size() >= 25) {
                 failureCount += 1;
                 Log.v(TAG, "saveData >=48  size = " + receivedData.size());
-                int sum = 0;
+                long sum = 0;
                 for (int i = 0; i < 24; i++) {
                     sum += receivedData.get(i);
                 }
-                if (sum == receivedData.get(24)) {//校验成功
+                String sumHex = Long.toHexString(sum);//校验和转换成16进制
+                String sunRec = oldData.get(oldData.size() - 1);//校验值
+                String lastTwo = sumHex.substring(sumHex.length() - sunRec.length());
+
+                if (sunRec.equalsIgnoreCase(lastTwo)) {//校验成功
                     failureCount = 0;
-                    ToastUtils.showToastShort(this, "校验成功,即将上传服务器中...");
-                    writeValue("Y");
+                    Message msg1 = Message.obtain();
+                    msg1.obj = "校验成功,即将上传服务器中...";
+                    handler.sendMessage(msg1);
+                    //ToastUtils.showToastShort(this, "校验成功,即将上传服务器中...");
                     Intent intent = new Intent(ACTION_DATA_AVAILABLE);
-                    intent.putExtra(BluetoothLeService.EXTRA_DATA, "---校验成功----");
+                    intent.putExtra(BluetoothLeService.EXTRA_DATA, "---校验成功---- 校验和：" + sumHex + " 校验值 " + sunRec);
                     sendBroadcast(intent);
-                    uploadDataToService();
+                    uploadDataToService(receivedData, oldData);
+                    writeValue("Y");
                 } else {//校验失败
                     if (failureCount == 3) {
                         failureCount = 0;
-                        ToastUtils.showToastShort(this, "连续接受数据三次失败，即将断开连接");
+                        Message msg1 = Message.obtain();
+                        msg1.obj = "连续接受数据三次失败，即将断开连接";
+                        handler.sendMessage(msg1);
                     } else {
-                        ToastUtils.showToastShort(this, "校验失败，即将进行下一次接受数据");
+                        Message msg2 = Message.obtain();
+                        msg2.obj = "校验失败，即将进行下一次接受数据";
+                        handler.sendMessage(msg2);
                         writeValue("N");
                     }
                     Intent intent = new Intent(ACTION_DATA_AVAILABLE);
+                    intent.putExtra(BluetoothLeService.EXTRA_DATA, "---校验失败----校验和： " + sumHex + " 校验值 " + sunRec);
                     sendBroadcast(intent);
-                    intent.putExtra(BluetoothLeService.EXTRA_DATA, "---校验失败----");
                 }
                 oldData.clear();
                 receivedData.clear();
@@ -299,15 +318,17 @@ public class BluetoothLeService extends Service {
         }
     }
 
-    private void uploadDataToService() {
+    private void uploadDataToService(List<Long> receivedDat, List<String> oldDat) {
+        Log.d(TAG, "uploadDataToService: " + String.valueOf(receivedDat) + String.valueOf(oldDat));
         ModelData data = new ModelData();
-        data.setDate(String.valueOf(System.currentTimeMillis()));
+        data.setDate(String.valueOf(System.currentTimeMillis()/1000));
         String str = "";
         for (int i = 1; i <= 20; i++) {
-            str += receivedData.get(i) + ",";
+            str += receivedDat.get(i) + ",";
         }
         data.setOldDataIntStr(str.substring(0, str.length() - 1));
-        data.setOldDataHex(oldData);
+        data.setOldDataHex(oldDat);
+        data.setHexStr(String.valueOf(oldDat));
         doUploadData(data);
     }
 
@@ -517,6 +538,7 @@ public class BluetoothLeService extends Service {
      * @param modelData
      */
     private void doUploadData(final ModelData modelData) {
+        Log.d(TAG, "doUploadData: " + String.valueOf(modelData));
 
         NetUtils.uploadDada(modelData.getOldDataIntStr(), new NetUtils.OnHttpCompleteListener() {
             @Override
@@ -530,8 +552,9 @@ public class BluetoothLeService extends Service {
 
             @Override
             public void onFailure(Object object) {
-                ToastUtils.showToastShort(BluetoothLeService.this, "上传服务器失败");
                 SharedPrefUtils.saveDataItem(modelData);
+                ToastUtils.showToastShort(BluetoothLeService.this, "上传服务器失败");
+
             }
         });
     }
