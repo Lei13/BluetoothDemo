@@ -98,10 +98,11 @@ public class BluetoothLeService extends Service {
                 failureCount = 0;
                 intentAction = ACTION_GATT_DISCONNECTED;
                 mConnectionState = STATE_DISCONNECTED;
+                broadcastUpdate(intentAction);
                 oldData.clear();
                 receivedData.clear();
                 Log.i(TAG, "Disconnected from GATT server.");
-                broadcastUpdate(intentAction);
+
             }
         }
 
@@ -267,6 +268,7 @@ public class BluetoothLeService extends Service {
 
     private void saveData(Intent intent1, String data) {
         try {
+            if (isReceiveDataY(data)) return;
             String showStr = data;
             if (!TextUtils.isEmpty(data) && data.length() == 8) {
                 oldData.clear();
@@ -299,7 +301,7 @@ public class BluetoothLeService extends Service {
                     handler.sendMessage(msg1);
                     //ToastUtils.showToastShort(this, "校验成功,即将上传服务器中...");
                     Intent intent = new Intent(ACTION_DATA_AVAILABLE);
-                    intent.putExtra(BluetoothLeService.EXTRA_DATA, "---校验成功---- 校验和：" + sumHex + " 校验值 " + sunRec);
+                    intent.putExtra(BluetoothLeService.EXTRA_DATA, "---接收数据成功---- 校验和：" + sumHex + " 校验值 " + sunRec);
                     sendBroadcast(intent);
                     uploadDataToService(receivedData, oldData);
                     writeValue("Y");
@@ -308,17 +310,17 @@ public class BluetoothLeService extends Service {
                     if (failureCount >= 3) {
                         failureCount = 0;
                         Message msg1 = Message.obtain();
-                        msg1.obj = "连续接受数据三次失败，即将断开连接";
+                        msg1.obj = "连续接收数据三次失败，即将断开连接";
                         handler.sendMessage(msg1);
                     } else {
                         Message msg2 = Message.obtain();
-                        msg2.obj = "校验失败，即将进行下一次接受数据";
+                        msg2.obj = "校验失败，即将进行下一次接收数据";
                         handler.sendMessage(msg2);
                         writeValue("N");
                     }
 
                     Intent intent = new Intent(ACTION_DATA_AVAILABLE);
-                    intent.putExtra(BluetoothLeService.EXTRA_DATA, "---校验失败----校验和： " + sumHex + " 校验值 " + sunRec);
+                    intent.putExtra(BluetoothLeService.EXTRA_DATA, "---接收数据失败----校验和： " + sumHex + " 校验值 " + sunRec);
                     sendBroadcast(intent);
                 }
                 oldData.clear();
@@ -327,16 +329,29 @@ public class BluetoothLeService extends Service {
             } else {
 
             }
-            if (failureCount >= 3) {
-                failureCount = 0;
-                Message msg1 = Message.obtain();
-                msg1.obj = "连续接受数据三次失败，即将断开连接";
-                handler.sendMessage(msg1);
-            }
+//            if (failureCount >= 3) {
+//                failureCount = 0;
+//                Message msg1 = Message.obtain();
+//                msg1.obj = "连续接受数据三次失败，即将断开连接";
+//                handler.sendMessage(msg1);
+//            }
         } catch (NumberFormatException e) {
             e.printStackTrace();
             Log.v(TAG, "saveData  NumberFormatException...");
         }
+    }
+
+    //发送“Y”给主机，0.5秒后将断开蓝牙连接，进入休眠状态。
+    private boolean isReceiveDataY(String data) {
+        String str = CommonUtils.print10(data);
+        if ("Y".equals(str)) {
+            Intent intent = new Intent(ACTION_DATA_AVAILABLE);
+            intent.putExtra(BluetoothLeService.EXTRA_DATA, "---断开连接----收到回复数据：十六进制： " + data + " 十进制： " + str);
+            sendBroadcast(intent);
+            disconnect();
+            return true;
+        }
+        return false;
     }
 
     private void uploadDataToService(List<Long> receivedDat, List<String> oldDat) {
