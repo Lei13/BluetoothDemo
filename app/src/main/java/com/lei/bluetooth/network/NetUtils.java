@@ -24,11 +24,12 @@ import java.util.Map;
 
 public class NetUtils {
     public static String TAG = NetUtils.class.getSimpleName();
-    public static final String URL = "http://qyu2508740001.my3w.com/index.php/Api/blueTooth";
+    //    public static final String URL = "http://qyu2508740001.my3w.com/index.php/Api/blueTooth";
+    public static final String URL = "http://47.91.77.124/index.php?s=Api/blueTooth";
     // public static final String URL = "http://renrentong.zhiyicx.com/api.php?mod=Weibo&act=getTopics&oauth_token=e61d5360b6001da2a9757a140599695a&oauth_token_secret=7785312ab69a363c4390035817bc6bfb";
 
     public static void uploadDada(final String data, final OnHttpCompleteListener listener) {
-        String url = URL + "?data=" + data + "&imei=" + CommonUtils.getPhoneIMEI();
+        String url = URL + "&data=" + data + "&imei=" + CommonUtils.getPhoneIMEI();
         JsonObjectRequest jsonObjReq = new JsonObjectRequest(Method.GET,
                 url,
                 new Listener<JSONObject>() {

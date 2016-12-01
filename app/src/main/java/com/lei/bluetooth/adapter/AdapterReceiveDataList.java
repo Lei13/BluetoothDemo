@@ -5,13 +5,16 @@ import android.text.TextUtils;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.lei.bluetooth.R;
 import com.lei.bluetooth.Utils.CommonUtils;
+import com.lei.bluetooth.Utils.Config;
 import com.lei.bluetooth.Utils.SharedPrefUtils;
 import com.lei.bluetooth.Utils.ToastUtils;
 import com.lei.bluetooth.activity.BluetoothLeService;
+import com.lei.bluetooth.activity.base.BaseActivity;
 import com.lei.bluetooth.bean.Model;
 import com.lei.bluetooth.bean.ModelData;
 import com.lei.bluetooth.bean.ModelDevice;
@@ -24,7 +27,7 @@ import java.util.List;
  */
 
 public class AdapterReceiveDataList extends AdapterBase {
-    public AdapterReceiveDataList(Context context, List<Model> models) {
+    public AdapterReceiveDataList(BaseActivity context, List<Model> models) {
         super(context, models);
     }
 
@@ -39,21 +42,21 @@ public class AdapterReceiveDataList extends AdapterBase {
             holder.tv_old_data = (TextView) convertView.findViewById(R.id.tv_old_data);
             holder.tv_change_data = (TextView) convertView.findViewById(R.id.tv_change_data);
             holder.tv_send = (TextView) convertView.findViewById(R.id.tv_send);
+            holder.ll_old_data = (LinearLayout) convertView.findViewById(R.id.ll_old_data);
+            holder.tv_code = (TextView) convertView.findViewById(R.id.tv_code);
             convertView.setTag(holder);
-        } else
+        } else {
             holder = (ViewHolder) convertView.getTag();
-
+        }
 
         ModelData data = (ModelData) getItem(position);
-
-        try {
-            holder.tv_date.setText("时间： " + CommonUtils.friendlyTime(data.getDate()));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        holder.tv_change_data.setText(TextUtils.isEmpty(data.getChange_data()) ? " " : (data.getChange_data()));
+        holder.tv_change_data.setText(TextUtils.isEmpty(data.getChange_data()) ? "" : (data.getChange_data()));
         holder.tv_old_data.setText(data.getHexStr());
-
+        if (Config.DEBUG) {
+            holder.ll_old_data.setVisibility(View.VISIBLE);
+        } else {
+            holder.ll_old_data.setVisibility(View.GONE);
+        }
         if (data.getStatus() == 1) {//已经存服务器
             holder.tv_send.setVisibility(View.GONE);
         } else {
@@ -62,10 +65,20 @@ public class AdapterReceiveDataList extends AdapterBase {
             holder.tv_send.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    doUploadData((ModelData) v.getTag());
+                    context.showDialog();
+                    doUploadData(v, (ModelData) v.getTag());
                 }
             });
         }
+        try {
+            holder.tv_date.setText("" + CommonUtils.friendlyTime(data.getDate()));
+            String hexStr = data.getHexStr();
+            holder.tv_code.setText("串        码："+hexStr.substring(1, hexStr.indexOf(",")));
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
         return convertView;
     }
 
@@ -74,29 +87,34 @@ public class AdapterReceiveDataList extends AdapterBase {
      *
      * @param modelData
      */
-    private void doUploadData(final ModelData modelData) {
-        modelData.setDate(String.valueOf(System.currentTimeMillis() / 1000));
+    private void doUploadData(final View view, final ModelData modelData) {
+        //modelData.setDate(String.valueOf(System.currentTimeMillis() / 1000));
         NetUtils.uploadDada(modelData.getOldDataIntStr(), new NetUtils.OnHttpCompleteListener() {
             @Override
             public void onSuccess(Model model) {
                 modelData.setStatus(1);
                 modelData.setData(((ModelData) model).getData());
                 modelData.setChange_data(((ModelData) model).getChange_data());
-                SharedPrefUtils.replaceItem(modelData);
                 replaceItem(modelData);
+                view.setTag(modelData);
+                context.dialogDismiss();
                 ToastUtils.showToastShort(context, "上传服务器成功");
+                SharedPrefUtils.replaceItem(modelData);
             }
 
             @Override
             public void onFailure(Object object) {
-                ToastUtils.showToastShort(context, "上传服务器失败");
+                context.dialogDismiss();
+                ToastUtils.showToastShort(context, object==null?"上传服务器失败":String.valueOf(object));
+
             }
         });
     }
 
     static class ViewHolder {
-        static TextView tv_date, tv_status, tv_old_data, tv_change_data;
+        static TextView tv_date, tv_status, tv_old_data, tv_change_data, tv_code;
         static TextView tv_send;
+        static LinearLayout ll_old_data;
 
     }
 

@@ -14,13 +14,18 @@ import android.text.TextUtils;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 
 import com.lei.bluetooth.R;
+import com.lei.bluetooth.Utils.Config;
 import com.lei.bluetooth.Utils.Logs;
+import com.lei.bluetooth.Utils.SharedPrefUtils;
 import com.lei.bluetooth.Utils.ToastUtils;
 import com.lei.bluetooth.activity.base.BaseActivity;
+import com.lei.bluetooth.adapter.AdapterReceiveDataList;
+import com.lei.bluetooth.bean.Model;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -30,14 +35,17 @@ import java.util.Set;
 
 public class ActivityConnectDevice extends BaseActivity {
     private TextView tv_device_info, tv_data, tv_connect_state, tv_connect, tv_send_data;
+    private TextView tv_data_state;
+    private LinearLayout ll_debug_info;//调式接收数据
     private String mDeviceName;
     private String mDeviceAddress;
     private BluetoothLeService mBluetoothLeService;
     private ArrayList<ArrayList<BluetoothGattCharacteristic>> mGattCharacteristics = new ArrayList<ArrayList<BluetoothGattCharacteristic>>();
     private EditText et_send;
     private Button btn_send, btn_read;
-    private ListView listview;
-
+    private ListView listview;//以往数据记录
+    private AdapterReceiveDataList mAdapter;
+    private List<Model> mData;
     private boolean mConnected = false;
 
 
@@ -82,7 +90,7 @@ public class ActivityConnectDevice extends BaseActivity {
     @Override
     protected void initView() {
         tv_center.setText(mDeviceName);
-
+        ll_debug_info = (LinearLayout) findViewById(R.id.ll_debug_info);
         tv_device_info = (TextView) findViewById(R.id.tv_device_info);
         tv_data = (TextView) findViewById(R.id.tv_data);
         tv_connect_state = (TextView) findViewById(R.id.tv_connect_state);
@@ -92,10 +100,13 @@ public class ActivityConnectDevice extends BaseActivity {
         listview = (ListView) findViewById(R.id.listview);
         tv_connect = (TextView) findViewById(R.id.tv_connect);
         tv_send_data = (TextView) findViewById(R.id.tv_send_data);
+        tv_data_state = (TextView) findViewById(R.id.tv_data_state);
         registerBluetoothReceiver();
         Intent gattServiceIntent = new Intent(this, BluetoothLeService.class);
         boolean bll = bindService(gattServiceIntent, mServiceConnection,
                 BIND_AUTO_CREATE);
+
+        setDebugMode();
     }
 
     @Override
@@ -108,9 +119,18 @@ public class ActivityConnectDevice extends BaseActivity {
     @Override
     protected void initData() {
         tv_device_info.setText("设备名称:  " + mDeviceName + "\n" + "设备地址: " + mDeviceAddress);
-
+        initRecordData();
     }
 
+    //展示过往数据列表
+    private void initRecordData() {
+        mData = SharedPrefUtils.getObject(Config.SP_NAME_INFO, Config.KEY_INFO);
+        if (mData == null) {
+            mData = new ArrayList<>();
+        }
+        mAdapter = new AdapterReceiveDataList(this, mData);
+        listview.setAdapter(mAdapter);
+    }
 
     @Override
     public void onClick(View v) {
@@ -193,7 +213,7 @@ public class ActivityConnectDevice extends BaseActivity {
 
     private void displayData(String data) {
         sb.append(data);
-        tv_data.append(data + "\n");
+        tv_data.append(data + "  ");
         Logs.d("displayData: " + sb.toString());
     }
 
@@ -203,5 +223,33 @@ public class ActivityConnectDevice extends BaseActivity {
         if (mServiceConnection != null)
             unbindService(mServiceConnection);
         unregisterReceiver(receiver);
+    }
+
+
+    private void setDebugMode() {
+        if (Config.DEBUG) {
+            tv_right.setText("调式：关闭");
+            ll_debug_info.setVisibility(View.VISIBLE);
+        } else {
+            tv_right.setText("调式：开启");
+            ll_debug_info.setVisibility(View.GONE);
+        }
+
+    }
+
+    @Override
+    public View.OnClickListener getRightListener() {
+        return new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (Config.DEBUG) {
+                    Config.DEBUG = false;
+                } else {
+                    Config.DEBUG = true;
+                }
+                setDebugMode();
+                initRecordData();
+            }
+        };
     }
 }

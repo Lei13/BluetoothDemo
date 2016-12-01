@@ -5,6 +5,7 @@ package com.lei.bluetooth.Utils;
  */
 
 public class Config {
+    public static boolean DEBUG = true;
     public static final String SP_NAME_INFO = "bluetooth_receive_info";
     public static final String KEY_INFO = "receive_info";
 }

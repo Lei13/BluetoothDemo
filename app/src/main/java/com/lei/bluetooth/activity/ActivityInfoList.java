@@ -8,6 +8,7 @@ import android.widget.TextView;
 import com.lei.bluetooth.R;
 import com.lei.bluetooth.Utils.Config;
 import com.lei.bluetooth.Utils.SharedPrefUtils;
+import com.lei.bluetooth.Utils.SmallDialog;
 import com.lei.bluetooth.activity.base.BaseActivity;
 import com.lei.bluetooth.adapter.AdapterReceiveDataList;
 import com.lei.bluetooth.bean.Model;
@@ -20,6 +21,7 @@ public class ActivityInfoList extends BaseActivity {
     private AdapterReceiveDataList adapter;
     private List<Model> data;
     private TextView tv_no_content;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,4 +70,6 @@ public class ActivityInfoList extends BaseActivity {
     public void onClick(View v) {
 
     }
+
+
 }

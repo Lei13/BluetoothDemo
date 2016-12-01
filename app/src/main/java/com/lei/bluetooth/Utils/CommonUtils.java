@@ -95,7 +95,7 @@ public class CommonUtils {
 
     public static String friendlyTime(String timestamp) {
         try {
-            return friendlyTime(Integer.valueOf(timestamp));
+            return friendlyTime(Long.parseLong(timestamp));
         } catch (NumberFormatException e) {
             e.printStackTrace();
         } catch (Exception e) {
@@ -105,7 +105,7 @@ public class CommonUtils {
 
     }
 
-    public static String friendlyTime(int timestamp) throws Exception {
+    public static String friendlyTime(long timestamp) throws Exception {
 
         long currentSeconds = System.currentTimeMillis() / 1000;
         long timeGap = currentSeconds - timestamp;// 与现在时间相差秒数
@@ -125,7 +125,7 @@ public class CommonUtils {
         } else if (timeGap >= 0 && timeGap < 60) {// 1秒钟-59秒钟
             timeStr = "刚刚";
         } else {
-            throw new Exception();
+            timeStr = getStandardTimeWithDate(timestamp);
         }
         return timeStr;
     }

@@ -30,7 +30,6 @@
         android:layout_height="match_parent"
         android:layout_alignParentRight="true"
         android:drawablePadding="5dp"
-        android:drawableRight="@mipmap/ic_more_dot_press"
         android:gravity="center"
         android:paddingRight="12dp"
         android:text="数据"

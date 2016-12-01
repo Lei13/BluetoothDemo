@@ -2,6 +2,7 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:background="@color/white"
     android:padding="12dp">
 
     <TextView
@@ -10,7 +11,7 @@
         android:layout_height="wrap_content"
         android:text="2015-2-12"
         android:textColor="@color/black"
-        android:textSize="14sp" />
+        android:textSize="12sp" />
 
     <TextView
         android:id="@+id/tv_send"
@@ -38,39 +39,51 @@
         android:layout_marginTop="5dp"
         android:orientation="vertical"
         android:paddingLeft="2dp">
+        <TextView
+            android:id="@+id/tv_code"
+            android:layout_width="match_parent"
+            android:text="串        码："
+            android:textSize="13sp"
+            android:layout_height="wrap_content" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="转换数据："
-            android:textSize="14sp" />
+            android:text="转换结果："
+            android:textSize="13sp" />
 
         <TextView
             android:id="@+id/tv_change_data"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:paddingLeft="5dp"
-            android:text="1222445.25555"
+            android:hint="未上传服务器转换数据"
             android:textColor="@color/mainColor"
-            android:textSize="16sp" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="5dp"
-            android:text="原始数据："
             android:textSize="14sp" />
 
-        <TextView
-            android:id="@+id/tv_old_data"
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:visibility="gone"
+            android:id="@+id/ll_old_data"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_below="@id/tv_change_data"
-            android:layout_marginTop="5dp"
-            android:paddingLeft="5dp"
-            android:text="1,2,5,6,8,7,9,5,,4,"
-            android:textColor="@color/black"
-            android:textSize="16sp" />
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="5dp"
+                android:text="原始数据："
+                android:textSize="13sp" />
+
+            <TextView
+                android:id="@+id/tv_old_data"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/tv_change_data"
+                android:layout_marginTop="5dp"
+                android:text="1,2,5,6,8,7,9,5,,4,"
+                android:textColor="@color/black"
+                android:textSize="14sp" />
+        </LinearLayout>
     </LinearLayout>
 
 </RelativeLayout>

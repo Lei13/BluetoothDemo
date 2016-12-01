@@ -16,11 +16,12 @@ public class ModelData extends Model {
     //蓝牙接受到的原始数据
     private String oldDataIntStr = "";
     private List<String> oldDataHex;
+    private String hexStr;//十六进制 字符串
     //保存服务器的一个状态
     private int status = 0;
     //收到数据的日期
     private String date;
-    private String hexStr;//十六进制 字符串
+
 
     public ModelData() {
     }

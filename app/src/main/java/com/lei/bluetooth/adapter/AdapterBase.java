@@ -6,6 +6,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 
+import com.lei.bluetooth.activity.base.BaseActivity;
 import com.lei.bluetooth.bean.Model;
 
 import java.util.ArrayList;
@@ -18,16 +19,23 @@ import java.util.List;
 public abstract class AdapterBase extends BaseAdapter {
     protected List<Model> mData = new ArrayList<>();
     protected LayoutInflater inflater;
-    protected Context context;
+    protected BaseActivity context;
 
 
-    public AdapterBase(Context context, List<Model> models) {
+    public AdapterBase(BaseActivity context, List<Model> models) {
+        if (models == null) models = new ArrayList<>();
         this.context = context;
         this.mData = models;
         inflater = LayoutInflater.from(context);
-        if (models == null) models = new ArrayList<>();
+
     }
 
+    public void setData(List<Model> models){
+        if (models == null) models = new ArrayList<>();
+        this.mData = models;
+        notifyDataSetChanged();
+
+    }
     @Override
     public int getCount() {
         return mData == null ? 0 : mData.size();
@@ -43,8 +51,5 @@ public abstract class AdapterBase extends BaseAdapter {
         return position;
     }
 
-    @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
-        return null;
-    }
+
 }

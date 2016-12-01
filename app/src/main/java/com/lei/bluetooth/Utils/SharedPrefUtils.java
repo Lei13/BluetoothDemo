@@ -109,7 +109,8 @@ public class SharedPrefUtils {
         if (data == null) return;
         List<ModelData> list = getObject(Config.SP_NAME_INFO, Config.KEY_INFO);
         if (list == null) return;
-        for (int i = 0; i < list.size() - 1; i++) {
+        int length = list.size();
+        for (int i = 0; i < length; i++) {
             if (data.equals(list.get(i))) {
                 list.set(i, data);
                 break;

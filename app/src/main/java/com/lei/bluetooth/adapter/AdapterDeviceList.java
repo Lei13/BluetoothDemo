@@ -6,6 +6,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.lei.bluetooth.R;
+import com.lei.bluetooth.activity.base.BaseActivity;
 import com.lei.bluetooth.bean.Model;
 import com.lei.bluetooth.bean.ModelDevice;
 
@@ -16,7 +17,7 @@ import java.util.List;
  */
 
 public class AdapterDeviceList extends AdapterBase {
-    public AdapterDeviceList(Context context, List<Model> models) {
+    public AdapterDeviceList(BaseActivity context, List<Model> models) {
         super(context, models);
     }
 
