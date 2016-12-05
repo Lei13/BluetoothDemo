@@ -22,6 +22,8 @@ public class ModelData extends Model {
     //收到数据的日期
     private String date;
 
+    private String address;//蓝牙地址
+
 
     public ModelData() {
     }
@@ -116,5 +118,13 @@ public class ModelData extends Model {
 
     public void setHexStr(String hexStr) {
         this.hexStr = hexStr;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
     }
 }

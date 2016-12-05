@@ -21,6 +21,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.lei.bluetooth.R;
+import com.lei.bluetooth.Utils.ButtonUtils;
 import com.lei.bluetooth.Utils.CommonUtils;
 import com.lei.bluetooth.Utils.Logs;
 import com.lei.bluetooth.Utils.ToastUtils;
@@ -65,6 +66,7 @@ public class ActivityBluetoothList extends BaseActivity implements AdapterView.O
     @Override
     protected void initView() {
         tv_center.setText("设备列表");
+        tv_right.setVisibility(View.GONE);
         lv_list = (ListView) findViewById(R.id.lv_bluetooth_list);
         tv_search = (TextView) findViewById(R.id.tv_search);
         btn_bluetooth_switch = (Button) findViewById(R.id.btn_bluetooth_switch);
@@ -107,8 +109,10 @@ public class ActivityBluetoothList extends BaseActivity implements AdapterView.O
 
     @Override
     protected void initData() {
-        adapter = new AdapterDeviceList(this, deviceList);
-        lv_list.setAdapter(adapter);
+        if (adapter == null) {
+            adapter = new AdapterDeviceList(this, deviceList);
+            lv_list.setAdapter(adapter);
+        }
     }
 
     private void doScanDevce() {
@@ -123,7 +127,7 @@ public class ActivityBluetoothList extends BaseActivity implements AdapterView.O
             initBluetooth();
         }
     }
-
+    ModelDevice device1;
     BluetoothAdapter.LeScanCallback leScanCallback = new BluetoothAdapter.LeScanCallback() {
         @Override
         public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
@@ -131,13 +135,15 @@ public class ActivityBluetoothList extends BaseActivity implements AdapterView.O
             String struuid = CommonUtils.bytes2HexString(CommonUtils.reverseBytes(scanRecord)).replace("-", "").toLowerCase();
             String sring = device.getName();
             Logs.v("onLeScan<<<<  scanRecord[]  " + struuid + "  name  " + sring + "  address   " + device.getAddress());
-            ModelDevice device1 = new ModelDevice();
+            device1 = new ModelDevice();
             device1.setName(device.getName());
             device1.setAddress(device.getAddress());
             device1.setExtraData(extra);
-            if (!deviceList.contains(device1))
+            if (!deviceList.contains(device1)) {
                 deviceList.add(device1);
-            adapter.notifyDataSetChanged();
+                adapter.notifyDataSetChanged();
+                lv_list.invalidateViews();
+            }
         }
     };
 
@@ -180,6 +186,7 @@ public class ActivityBluetoothList extends BaseActivity implements AdapterView.O
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         ModelDevice device = (ModelDevice) parent.getAdapter().getItem(position);
+        if (ButtonUtils.isFastDoubleClick()) return;
         if (device != null /*&& !TextUtils.isEmpty(device.getName())*/) {
             Intent intent = new Intent(this, ActivityConnectDevice.class);
             intent.putExtra("name", device.getName());

@@ -48,6 +48,9 @@ public class BluetoothLeService extends Service {
     public final static String ACTION_GATT_SERVICES_DISCOVERED = "com.lei.bledemo.ACTION_GATT_SERVICES_DISCOVERED";
     public final static String ACTION_DATA_AVAILABLE = "com.lei.bledemo.ACTION_DATA_AVAILABLE";
     public final static String ACTION_DATA_WRITE = "com.lei.bledemo.ACTION_WRITE_DATA";
+    public final static String ACTION_DATA_APPEND = "com.lei.bledemo.ACTION_APPEND_DATA";
+    public final static String ACTION_DATA_START = "com.lei.bledemo.ACTION_START_RECEIVE_DATA";
+    public final static String ACTION_DATA_END = "com.lei.bledemo.ACTION_END_RECEIVE_DATA";
     public final static String EXTRA_DATA = "com.lei.bledemo.EXTRA_DATA";
 
     //0000ff02-0000-1000-8000-00805f9b34fb
@@ -275,7 +278,9 @@ public class BluetoothLeService extends Service {
                 receivedData.clear();
                 failureCount += 1;
                 showStr = "\n第" + failureCount + "次接收数据  \n" + data;
-
+                if (failureCount == 1) {
+                    notifyReceiveDataStart();
+                }
             }
             intent1.putExtra(EXTRA_DATA, showStr);
             sendBroadcast(intent1);
@@ -301,10 +306,11 @@ public class BluetoothLeService extends Service {
                     handler.sendMessage(msg1);
                     //ToastUtils.showToastShort(this, "校验成功,即将上传服务器中...");
                     Intent intent = new Intent(ACTION_DATA_AVAILABLE);
-                    intent.putExtra(BluetoothLeService.EXTRA_DATA, "\n---接收数据成功---- 校验和：" + sumHex + " 校验值 " + sunRec+"\n");
+                    intent.putExtra(BluetoothLeService.EXTRA_DATA, "\n---接收数据成功---- 校验和：" + sumHex + " 校验值 " + sunRec + "\n");
                     sendBroadcast(intent);
                     uploadDataToService(receivedData, oldData);
                     writeValue("Y");
+                    notifyReceiveDataEnd();
                     return;
                 } else {//校验失败
                     if (failureCount >= 3) {
@@ -320,7 +326,7 @@ public class BluetoothLeService extends Service {
                     }
 
                     Intent intent = new Intent(ACTION_DATA_AVAILABLE);
-                    intent.putExtra(BluetoothLeService.EXTRA_DATA, "\n---接收数据失败----校验和： " + sumHex + " 校验值 " + sunRec+"\n");
+                    intent.putExtra(BluetoothLeService.EXTRA_DATA, "\n---接收数据失败----校验和： " + sumHex + " 校验值 " + sunRec + "\n");
                     sendBroadcast(intent);
                 }
                 oldData.clear();
@@ -341,12 +347,22 @@ public class BluetoothLeService extends Service {
         }
     }
 
+    private void notifyReceiveDataStart() {
+        Intent intent = new Intent(ACTION_DATA_START);
+        sendBroadcast(intent);
+    }
+
+    private void notifyReceiveDataEnd() {
+        Intent intent = new Intent(ACTION_DATA_END);
+        sendBroadcast(intent);
+    }
+
     //发送“Y”给主机，0.5秒后将断开蓝牙连接，进入休眠状态。
     private boolean isReceiveDataY(String data) {
         String str = CommonUtils.print10(data);
         if ("Y".equals(str)) {
             Intent intent = new Intent(ACTION_DATA_AVAILABLE);
-            intent.putExtra(BluetoothLeService.EXTRA_DATA, "\n---断开连接----收到回复数据：十六进制： " + data + " 十进制： " + str +"\n");
+            intent.putExtra(BluetoothLeService.EXTRA_DATA, "\n---断开连接----收到回复数据：十六进制： " + data + " 十进制： " + str + "\n");
             sendBroadcast(intent);
             disconnect();
             return true;
@@ -584,16 +600,25 @@ public class BluetoothLeService extends Service {
                 saveData.setDate(modelData.getDate());
                 saveData.setHexStr(modelData.getHexStr());
                 saveData.setOldDataHex(modelData.getOldDataHex());
-                SharedPrefUtils.saveDataItem(saveData);
+                saveData.setAddress(mBluetoothDeviceAddress);
+                SharedPrefUtils.saveDataItem(mBluetoothDeviceAddress, saveData);
                 ToastUtils.showToastShort(BluetoothLeService.this, "上传服务器成功");
+                notifyAppendData();
             }
 
             @Override
             public void onFailure(Object object) {
-                SharedPrefUtils.saveDataItem(modelData);
-                ToastUtils.showToastShort(BluetoothLeService.this, object==null?"上传服务器失败":String.valueOf(object));
+                modelData.setAddress(mBluetoothDeviceAddress);
+                SharedPrefUtils.saveDataItem(mBluetoothDeviceAddress, modelData);
+                notifyAppendData();
+                ToastUtils.showToastShort(BluetoothLeService.this, object == null ? "上传服务器失败" : String.valueOf(object));
 
             }
         });
+    }
+
+    private void notifyAppendData() {
+        Intent intent = new Intent(ACTION_DATA_APPEND);
+        sendBroadcast(intent);
     }
 }

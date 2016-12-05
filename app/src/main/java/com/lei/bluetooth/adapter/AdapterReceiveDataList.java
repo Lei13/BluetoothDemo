@@ -73,7 +73,7 @@ public class AdapterReceiveDataList extends AdapterBase {
         try {
             holder.tv_date.setText("" + CommonUtils.friendlyTime(data.getDate()));
             String hexStr = data.getHexStr();
-            holder.tv_code.setText("串        码："+hexStr.substring(1, hexStr.indexOf(",")));
+            holder.tv_code.setText("串        码：" + hexStr.substring(1, hexStr.indexOf(",")));
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -99,22 +99,22 @@ public class AdapterReceiveDataList extends AdapterBase {
                 view.setTag(modelData);
                 context.dialogDismiss();
                 ToastUtils.showToastShort(context, "上传服务器成功");
-                SharedPrefUtils.replaceItem(modelData);
+                SharedPrefUtils.replaceItem(modelData.getAddress(),modelData);
             }
 
             @Override
             public void onFailure(Object object) {
                 context.dialogDismiss();
-                ToastUtils.showToastShort(context, object==null?"上传服务器失败":String.valueOf(object));
+                ToastUtils.showToastShort(context, object == null ? "上传服务器失败" : String.valueOf(object));
 
             }
         });
     }
 
-    static class ViewHolder {
-        static TextView tv_date, tv_status, tv_old_data, tv_change_data, tv_code;
-        static TextView tv_send;
-        static LinearLayout ll_old_data;
+    class ViewHolder {
+        TextView tv_date, tv_status, tv_old_data, tv_change_data, tv_code;
+        TextView tv_send;
+        LinearLayout ll_old_data;
 
     }
 

@@ -6,6 +6,7 @@ import android.text.TextUtils;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.Volley;
+import com.lei.bluetooth.Utils.Config;
 
 /**
  * Created by lei on 2016/11/16.
@@ -19,6 +20,7 @@ public class BleApplication extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
+        Config.DEBUG = false;
         mInstance = this;
     }
 

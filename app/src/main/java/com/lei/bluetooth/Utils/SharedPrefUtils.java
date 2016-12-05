@@ -2,6 +2,7 @@ package com.lei.bluetooth.Utils;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.hardware.camera2.params.Face;
 import android.util.Base64;
 
 import com.lei.bluetooth.application.BleApplication;
@@ -95,19 +96,19 @@ public class SharedPrefUtils {
     }
 
 
-    public static void saveDataItem(ModelData data) {
+    public static void saveDataItem(String key, ModelData data) {
         if (data == null) return;
-        List<ModelData> list = getObject(Config.SP_NAME_INFO, Config.KEY_INFO);
+        List<ModelData> list = getObject(Config.SP_NAME_INFO, key);
         if (list == null) {
             list = new ArrayList<>();
         }
         list.add(0, data);
-        saveObject(Config.SP_NAME_INFO, Config.KEY_INFO, list);
+        saveObject(Config.SP_NAME_INFO, key, list);
     }
 
-    public static void replaceItem(ModelData data) {
+    public static void replaceItem(String key, ModelData data) {
         if (data == null) return;
-        List<ModelData> list = getObject(Config.SP_NAME_INFO, Config.KEY_INFO);
+        List<ModelData> list = getObject(Config.SP_NAME_INFO, key);
         if (list == null) return;
         int length = list.size();
         for (int i = 0; i < length; i++) {
@@ -116,6 +117,16 @@ public class SharedPrefUtils {
                 break;
             }
         }
-        saveObject(Config.SP_NAME_INFO, Config.KEY_INFO, list);
+        saveObject(Config.SP_NAME_INFO, key, list);
+    }
+
+    public static boolean clearKey(String key) {
+        SharedPreferences sp = getSharedPreference(Config.SP_NAME_INFO);
+        if (sp.contains(key)) {
+            sp.edit().putString(key, null).commit();
+            return true;
+        }
+        return false;
+
     }
 }

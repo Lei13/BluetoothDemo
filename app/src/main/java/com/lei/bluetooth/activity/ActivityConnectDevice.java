@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.os.IBinder;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -19,6 +20,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.lei.bluetooth.R;
+import com.lei.bluetooth.Utils.ButtonUtils;
 import com.lei.bluetooth.Utils.Config;
 import com.lei.bluetooth.Utils.Logs;
 import com.lei.bluetooth.Utils.SharedPrefUtils;
@@ -36,6 +38,7 @@ import java.util.Set;
 public class ActivityConnectDevice extends BaseActivity {
     private TextView tv_device_info, tv_data, tv_connect_state, tv_connect, tv_send_data;
     private TextView tv_data_state;
+    private TextView tv_delete;
     private LinearLayout ll_debug_info;//调式接收数据
     private String mDeviceName;
     private String mDeviceAddress;
@@ -90,6 +93,7 @@ public class ActivityConnectDevice extends BaseActivity {
     @Override
     protected void initView() {
         tv_center.setText(mDeviceName);
+        tv_delete = (TextView) findViewById(R.id.tv_delete);
         ll_debug_info = (LinearLayout) findViewById(R.id.ll_debug_info);
         tv_device_info = (TextView) findViewById(R.id.tv_device_info);
         tv_data = (TextView) findViewById(R.id.tv_data);
@@ -107,6 +111,7 @@ public class ActivityConnectDevice extends BaseActivity {
                 BIND_AUTO_CREATE);
 
         setDebugMode();
+        setReceiveData(false);
     }
 
     @Override
@@ -114,6 +119,7 @@ public class ActivityConnectDevice extends BaseActivity {
         btn_send.setOnClickListener(this);
         btn_read.setOnClickListener(this);
         tv_connect.setOnClickListener(this);
+        tv_delete.setOnClickListener(this);
     }
 
     @Override
@@ -124,7 +130,7 @@ public class ActivityConnectDevice extends BaseActivity {
 
     //展示过往数据列表
     private void initRecordData() {
-        mData = SharedPrefUtils.getObject(Config.SP_NAME_INFO, Config.KEY_INFO);
+        mData = SharedPrefUtils.getObject(Config.SP_NAME_INFO, mDeviceAddress);
         if (mData == null) {
             mData = new ArrayList<>();
         }
@@ -153,6 +159,15 @@ public class ActivityConnectDevice extends BaseActivity {
                     mBluetoothLeService.connect(mDeviceAddress);
                 }
                 break;
+            case R.id.tv_delete:
+                boolean isClear = SharedPrefUtils.clearKey(mDeviceAddress);
+                if (isClear) {
+                    ToastUtils.showToastShort(this, "清空成功");
+                    initRecordData();
+                } else {
+                    ToastUtils.showToastShort(this, "没有可以清空的数据");
+                }
+                break;
         }
     }
 
@@ -166,6 +181,9 @@ public class ActivityConnectDevice extends BaseActivity {
                 .addAction(BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED);
         filter.addAction(BluetoothLeService.ACTION_DATA_AVAILABLE);
         filter.addAction(BluetoothLeService.ACTION_DATA_WRITE);
+        filter.addAction(BluetoothLeService.ACTION_DATA_APPEND);
+        filter.addAction(BluetoothLeService.ACTION_DATA_START);
+        filter.addAction(BluetoothLeService.ACTION_DATA_END);
         filter.addAction(BluetoothLeService.EXTRA_DATA);
         receiver = new BluetoothReceiver();
         registerReceiver(receiver, filter);
@@ -186,6 +204,7 @@ public class ActivityConnectDevice extends BaseActivity {
                         mConnected = false;
                         tv_connect.setVisibility(View.VISIBLE);
                         tv_connect_state.setText("连接失败");
+                        setReceiveData(false);
                     }
                 });
 
@@ -195,6 +214,12 @@ public class ActivityConnectDevice extends BaseActivity {
                 displayData(intent.getStringExtra(BluetoothLeService.EXTRA_DATA));
             } else if (BluetoothLeService.ACTION_DATA_WRITE.equals(action)) {
                 tv_send_data.append(intent.getStringExtra("data") + "   ");
+            } else if (BluetoothLeService.ACTION_DATA_APPEND.equals(action)) {
+                initRecordData();
+            } else if (BluetoothLeService.ACTION_DATA_START.equals(action)) {
+                setReceiveData(true);
+            } else if (BluetoothLeService.ACTION_DATA_END.equals(action)) {
+                setReceiveData(false);
             }
         }
     }
@@ -235,6 +260,14 @@ public class ActivityConnectDevice extends BaseActivity {
             ll_debug_info.setVisibility(View.GONE);
         }
 
+    }
+
+    private void setReceiveData(boolean isStart) {
+        if (isStart) {
+            tv_data_state.setVisibility(View.VISIBLE);
+        } else {
+            tv_data_state.setVisibility(View.GONE);
+        }
     }
 
     @Override
