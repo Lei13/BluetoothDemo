@@ -36,15 +36,14 @@ import java.util.UUID;
  * hosted on a given Bluetooth LE device.
  */
 @SuppressLint("NewApi")
-public class BluetoothLeService extends Service {
-    private final static String TAG = BluetoothLeService.class.getSimpleName();
+public class BluetoothLeServiceHistory extends Service {
+    private final static String TAG = BluetoothLeServiceHistory.class.getSimpleName();
 
     private static final int STATE_DISCONNECTED = 0;
     private static final int STATE_CONNECTING = 1;
     private static final int STATE_CONNECTED = 2;
 
     public final static String ACTION_GATT_CONNECTED = "com.lei.bledemo.ACTION_GATT_CONNECTED";
-    public final static String ACTION_GATT_CONNECTING = "com.lei.bledemo.ACTION_GATT_CONNECTING";
     public final static String ACTION_GATT_DISCONNECTED = "com.lei.bledemo.ACTION_GATT_DISCONNECTED";
     public final static String ACTION_GATT_SERVICES_DISCOVERED = "com.lei.bledemo.ACTION_GATT_SERVICES_DISCOVERED";
     public final static String ACTION_DATA_AVAILABLE = "com.lei.bledemo.ACTION_DATA_AVAILABLE";
@@ -71,12 +70,13 @@ public class BluetoothLeService extends Service {
     BluetoothGattCharacteristic mNotifyCharacteristic;
     private List<Long> receivedData = new ArrayList<>();
     private List<String> oldData = new ArrayList<>();
-    private String mReceiveHexStr = "";
+    private int failureCount = 0;//重新接受数据的次数（不能超过三次）
+
     private Handler handler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
-            ToastUtils.showToastShort(BluetoothLeService.this, String.valueOf(msg.obj));
+            ToastUtils.showToastShort(BluetoothLeServiceHistory.this, String.valueOf(msg.obj));
         }
     };
 
@@ -89,7 +89,6 @@ public class BluetoothLeService extends Service {
                                             int newState) {
             String intentAction;
             if (newState == BluetoothProfile.STATE_CONNECTED) {
-                mReceiveHexStr = "";
                 intentAction = ACTION_GATT_CONNECTED;
                 mConnectionState = STATE_CONNECTED;
                 mBluetoothGatt.discoverServices();
@@ -99,10 +98,12 @@ public class BluetoothLeService extends Service {
                 Log.i(TAG, "Attempting to start service discovery:");
                 broadcastUpdate(intentAction);
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
+                failureCount = 0;
                 intentAction = ACTION_GATT_DISCONNECTED;
                 mConnectionState = STATE_DISCONNECTED;
                 broadcastUpdate(intentAction);
-                mReceiveHexStr = "";
+                oldData.clear();
+                receivedData.clear();
                 Log.i(TAG, "Disconnected from GATT server.");
 
             }
@@ -269,93 +270,81 @@ public class BluetoothLeService extends Service {
     }
 
     private void saveData(Intent intent1, String data) {
-        intent1.putExtra(EXTRA_DATA, data);
-        sendBroadcast(intent1);
-        Log.v(TAG, "data.length() " + data.length() + "   " + data);
-        if (data.length() == 2 && isReceiveDataY(data)) return;
-        if (data.length() >= 10 && data.length() <= 40 && mReceiveHexStr.length() < 90) {
-            mReceiveHexStr += data;
-        }
-        if (mReceiveHexStr.length() > 80 && mReceiveHexStr.length() < 96) {
-            writeValue("N");
-            Message msg1 = Message.obtain();
-            msg1.obj = "接收数据格式不正确...";
-            handler.sendMessage(msg1);
-            mReceiveHexStr = "";
-            return;
-
-        } else if (mReceiveHexStr.length() >= 96) {
-            if (parseData(mReceiveHexStr)) {
-                writeValue("Y");
-                Message msg1 = Message.obtain();
-                msg1.obj = "校验成功,即将上传服务器中...";
-                handler.sendMessage(msg1);
-                uploadDataToService(receivedData, oldData);
-            } else {
-                writeValue("N");
-                Message msg2 = Message.obtain();
-                msg2.obj = "校验失败";
-                handler.sendMessage(msg2);
-
-            }
-            mReceiveHexStr = "";
-        }
-    }
-
-
-    private boolean parseData(String hexStr) {
         try {
-            oldData.clear();
-            receivedData.clear();
-            long totalSum = 0;
-            String code = hexStr.substring(0, 8);//串码
-            long codeValue = Long.valueOf(code, 16);
-            totalSum += codeValue;
-            oldData.add(code);
-            receivedData.add(codeValue);
-            int pos = 8;
-            for (int i = 0; i < 20; i++) {//20个数据
-                String dataI = hexStr.substring(pos, pos + 4);
-                long dataValue = Long.valueOf(dataI, 16);
-                totalSum += dataValue;
-                oldData.add(dataI);
-                receivedData.add(dataValue);
-                pos = pos + 4;
+            if (isReceiveDataY(data)) return;
+            String showStr = data;
+            if (!TextUtils.isEmpty(data) && data.length() == 8) {
+                oldData.clear();
+                receivedData.clear();
+                failureCount += 1;
+                showStr = "\n第" + failureCount + "次接收数据  \n" + data;
+                if (failureCount == 1) {
+                    notifyReceiveDataStart();
+                }
             }
-            for (int i = 0; i < 3; i++) {//状态字
-                String status = hexStr.substring(pos, pos + 2);
-                long dataValue = Long.valueOf(status, 16);
-                totalSum += dataValue;
-                oldData.add(status);
-                receivedData.add(dataValue);
-                pos = pos + 2;
-            }
-            String sum = hexStr.substring(pos);//校验位
-            oldData.add(sum);
-            receivedData.add(Long.valueOf(sum, 16));
+            intent1.putExtra(EXTRA_DATA, showStr);
+            sendBroadcast(intent1);
+            oldData.add(data);
+            long value = Long.valueOf(data, 16);
+            Log.v(TAG, "STR:  " + data + "   value   " + value);
+            receivedData.add(value);
+            if (receivedData.size() >= 25) {
 
-            //开始校验
-            String sumHex = Long.toHexString(totalSum);//校验和转换成16进制
-            String lastTwo = sumHex.substring(sumHex.length() - sum.length());
-            String debugStr = "";
-            if (sum.equalsIgnoreCase(lastTwo)) {//校验成功
-                debugStr = "\n---接收数据成功----校验和： " + sumHex + " 校验值 " + sum + "\n";
-                Intent intent = new Intent(ACTION_DATA_AVAILABLE);
-                intent.putExtra(EXTRA_DATA, debugStr);
-                sendBroadcast(intent);
-                return true;
-            }  //失败
-            debugStr = "\n---接收数据失败----校验和： " + sumHex + " 校验值 " + sum + "\n";
-            Intent intent = new Intent(ACTION_DATA_AVAILABLE);
-            intent.putExtra(EXTRA_DATA, debugStr);
-            sendBroadcast(intent);
-        } catch (Exception e) {
-            Message msg1 = Message.obtain();
-            msg1.obj = "数据解析错误";
-            handler.sendMessage(msg1);
-            writeValue("N");
+                Log.v(TAG, "saveData >=48  size = " + receivedData.size());
+                long sum = 0;
+                for (int i = 0; i < 24; i++) {
+                    sum += receivedData.get(i);
+                }
+                String sumHex = Long.toHexString(sum);//校验和转换成16进制
+                String sunRec = oldData.get(oldData.size() - 1);//校验值
+                String lastTwo = sumHex.substring(sumHex.length() - sunRec.length());
+
+                if (sunRec.equalsIgnoreCase(lastTwo)) {//校验成功
+                    failureCount = 0;
+                    Message msg1 = Message.obtain();
+                    msg1.obj = "校验成功,即将上传服务器中...";
+                    handler.sendMessage(msg1);
+                    //ToastUtils.showToastShort(this, "校验成功,即将上传服务器中...");
+                    Intent intent = new Intent(ACTION_DATA_AVAILABLE);
+                    intent.putExtra(BluetoothLeServiceHistory.EXTRA_DATA, "\n---接收数据成功---- 校验和：" + sumHex + " 校验值 " + sunRec + "\n");
+                    sendBroadcast(intent);
+                    uploadDataToService(receivedData, oldData);
+                    writeValue("Y");
+                    notifyReceiveDataEnd();
+                    return;
+                } else {//校验失败
+                    if (failureCount >= 3) {
+                        failureCount = 0;
+                        Message msg1 = Message.obtain();
+                        msg1.obj = "连续接收数据三次失败，即将断开连接";
+                        handler.sendMessage(msg1);
+                    } else {
+                        Message msg2 = Message.obtain();
+                        msg2.obj = "校验失败，即将进行下一次接收数据";
+                        handler.sendMessage(msg2);
+                        writeValue("N");
+                    }
+
+                    Intent intent = new Intent(ACTION_DATA_AVAILABLE);
+                    intent.putExtra(BluetoothLeServiceHistory.EXTRA_DATA, "\n---接收数据失败----校验和： " + sumHex + " 校验值 " + sunRec + "\n");
+                    sendBroadcast(intent);
+                }
+                oldData.clear();
+                receivedData.clear();
+                return;
+            } else {
+
+            }
+//            if (failureCount >= 3) {
+//                failureCount = 0;
+//                Message msg1 = Message.obtain();
+//                msg1.obj = "连续接受数据三次失败，即将断开连接";
+//                handler.sendMessage(msg1);
+//            }
+        } catch (NumberFormatException e) {
+            e.printStackTrace();
+            Log.v(TAG, "saveData  NumberFormatException...");
         }
-        return false;
     }
 
     private void notifyReceiveDataStart() {
@@ -373,7 +362,7 @@ public class BluetoothLeService extends Service {
         String str = CommonUtils.print10(data);
         if ("Y".equals(str)) {
             Intent intent = new Intent(ACTION_DATA_AVAILABLE);
-            intent.putExtra(BluetoothLeService.EXTRA_DATA, "\n---断开连接----收到回复数据：十六进制： " + data + " 十进制： " + str + "\n");
+            intent.putExtra(BluetoothLeServiceHistory.EXTRA_DATA, "\n---断开连接----收到回复数据：十六进制： " + data + " 十进制： " + str + "\n");
             sendBroadcast(intent);
             disconnect();
             return true;
@@ -396,8 +385,8 @@ public class BluetoothLeService extends Service {
     }
 
     public class LocalBinder extends Binder {
-        BluetoothLeService getService() {
-            return BluetoothLeService.this;
+        BluetoothLeServiceHistory getService() {
+            return BluetoothLeServiceHistory.this;
         }
     }
 
@@ -470,7 +459,6 @@ public class BluetoothLeService extends Service {
             Log.d(TAG, "Trying to use an existing mBluetoothGatt for connection.");
             if (mBluetoothGatt.connect()) {
                 mConnectionState = STATE_CONNECTING;
-                broadcastUpdate(ACTION_GATT_CONNECTING);
                 return true;
             } else {
                 return false;
@@ -614,7 +602,7 @@ public class BluetoothLeService extends Service {
                 saveData.setOldDataHex(modelData.getOldDataHex());
                 saveData.setAddress(mBluetoothDeviceAddress);
                 SharedPrefUtils.saveDataItem(mBluetoothDeviceAddress, saveData);
-                ToastUtils.showToastShort(BluetoothLeService.this, "上传服务器成功");
+                ToastUtils.showToastShort(BluetoothLeServiceHistory.this, "上传服务器成功");
                 notifyAppendData();
             }
 
@@ -623,7 +611,7 @@ public class BluetoothLeService extends Service {
                 modelData.setAddress(mBluetoothDeviceAddress);
                 SharedPrefUtils.saveDataItem(mBluetoothDeviceAddress, modelData);
                 notifyAppendData();
-                ToastUtils.showToastShort(BluetoothLeService.this, object == null ? "上传服务器失败" : String.valueOf(object));
+                ToastUtils.showToastShort(BluetoothLeServiceHistory.this, object == null ? "上传服务器失败" : String.valueOf(object));
 
             }
         });

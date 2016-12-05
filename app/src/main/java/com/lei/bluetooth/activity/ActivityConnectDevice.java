@@ -176,6 +176,7 @@ public class ActivityConnectDevice extends BaseActivity {
     private void registerBluetoothReceiver() {
         IntentFilter filter = new IntentFilter();
         filter.addAction(BluetoothLeService.ACTION_GATT_CONNECTED);
+        filter.addAction(BluetoothLeService.ACTION_GATT_CONNECTING);
         filter.addAction(BluetoothLeService.ACTION_GATT_DISCONNECTED);
         filter
                 .addAction(BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED);
@@ -205,6 +206,16 @@ public class ActivityConnectDevice extends BaseActivity {
                         tv_connect.setVisibility(View.VISIBLE);
                         tv_connect_state.setText("连接失败");
                         setReceiveData(false);
+                    }
+                });
+
+            } else if (BluetoothLeService.ACTION_GATT_CONNECTING.equals(action)) {//连接中
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        mConnected = false;
+                        tv_connect.setVisibility(View.GONE);
+                        tv_connect_state.setText("连接中...");
                     }
                 });
 
@@ -263,11 +274,12 @@ public class ActivityConnectDevice extends BaseActivity {
     }
 
     private void setReceiveData(boolean isStart) {
-        if (isStart) {
-            tv_data_state.setVisibility(View.VISIBLE);
-        } else {
-            tv_data_state.setVisibility(View.GONE);
-        }
+        tv_data_state.setVisibility(View.GONE);
+//        if (isStart) {
+//            tv_data_state.setVisibility(View.VISIBLE);
+//        } else {
+//            tv_data_state.setVisibility(View.GONE);
+//        }
     }
 
     @Override
