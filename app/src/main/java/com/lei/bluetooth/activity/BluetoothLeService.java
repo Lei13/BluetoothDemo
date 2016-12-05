@@ -269,11 +269,11 @@ public class BluetoothLeService extends Service {
     }
 
     private void saveData(Intent intent1, String data) {
-        intent1.putExtra(EXTRA_DATA, data);
+        intent1.putExtra(EXTRA_DATA, data+"  ");
         sendBroadcast(intent1);
         Log.v(TAG, "data.length() " + data.length() + "   " + data);
         if (data.length() == 2 && isReceiveDataY(data)) return;
-        if (data.length() >= 10 && data.length() <= 40 && mReceiveHexStr.length() < 90) {
+        if (data.length() >= 2 && data.length() <= 40 && mReceiveHexStr.length() <= 80) {
             mReceiveHexStr += data;
         }
         if (mReceiveHexStr.length() > 80 && mReceiveHexStr.length() < 96) {
