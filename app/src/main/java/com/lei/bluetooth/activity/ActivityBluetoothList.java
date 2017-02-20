@@ -127,8 +127,9 @@ public class ActivityBluetoothList extends BaseActivity implements AdapterView.O
             initBluetooth();
         }
     }
-    ModelDevice device1;
-    BluetoothAdapter.LeScanCallback leScanCallback = new BluetoothAdapter.LeScanCallback() {
+
+    private ModelDevice device1;
+    private BluetoothAdapter.LeScanCallback leScanCallback = new BluetoothAdapter.LeScanCallback() {
         @Override
         public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
             String extra = new String(scanRecord);

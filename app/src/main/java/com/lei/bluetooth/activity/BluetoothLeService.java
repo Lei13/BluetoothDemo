@@ -268,12 +268,18 @@ public class BluetoothLeService extends Service {
 
     }
 
+    /**
+     * 保存数据（分包接收三次）
+     *
+     * @param intent1
+     * @param data
+     */
     private void saveData(Intent intent1, String data) {
-        intent1.putExtra(EXTRA_DATA, data+"  ");
+        intent1.putExtra(EXTRA_DATA, data + "  ");
         sendBroadcast(intent1);
         Log.v(TAG, "data.length() " + data.length() + "   " + data);
         if (data.length() == 2 && isReceiveDataY(data)) return;
-        if (data.length() >= 2 && data.length() <= 40 && mReceiveHexStr.length() <= 80) {
+        if (data.length() >= 2 && data.length() <= 96 && mReceiveHexStr.length() < 96) {
             mReceiveHexStr += data;
         }
         if (mReceiveHexStr.length() > 80 && mReceiveHexStr.length() < 96) {
@@ -302,7 +308,12 @@ public class BluetoothLeService extends Service {
         }
     }
 
-
+    /**
+     * 解析数据，一次性发送48个字节（由于蓝牙协议，一次最多发送20字节，所以分包接收）
+     *
+     * @param hexStr
+     * @return
+     */
     private boolean parseData(String hexStr) {
         try {
             oldData.clear();
